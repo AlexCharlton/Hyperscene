@@ -44,8 +44,9 @@ struct camera {
     HPGscene *scene;
     CameraStyle style;
     Point position, up, object;
-    float angle, tilt, roll, distance;
+    float pan, tilt, roll, distance;
     float n, f, viewAngle;
+    float rotation[16];
     float projection[16];
     float viewProjection[16];
     float modelViewProjection[16];

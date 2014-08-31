@@ -256,12 +256,12 @@ void hpgRenderCamera(HPGcamera *camera){
     if (camera->style == ORBIT){
         float cosTilt = cos(c->tilt);
         float sinTilt = sin(c->tilt);
-        float sinPan = sin(c->angle);
-        float cosPan = cos(c->angle);
+        float sinPan = sin(c->pan);
+        float cosPan = cos(c->pan);
         c->position.x = c->object.x + c->distance * cosTilt * sinPan;
         c->position.y = c->object.y + c->distance * sinTilt;
         c->position.z = c->object.z + c->distance * cosTilt * cosPan;
-        hpmYPRRotation(c->angle, -c->tilt, c->roll, cameraMat);
+        hpmYPRRotation(c->pan, -c->tilt, c->roll, cameraMat);
         hpmTranslate(c->position.x, c->position.y, c->position.z, cameraMat);
         hpmCameraInverse(cameraMat, view);
     } else if (camera->style == LOOK_AT){
@@ -270,7 +270,7 @@ void hpgRenderCamera(HPGcamera *camera){
                   c->up.x, c->up.y, c->up.z,
                   view);
     } else {
-        hpmRotation(c->up.x, c->up.y, c->up.z, c->angle, cameraMat);
+        hpmCopyMat4(c->rotation, cameraMat);
         hpmTranslate(c->position.x, c->position.y, c->position.z, cameraMat);
         hpmCameraInverse(cameraMat, view);
     }
@@ -305,10 +305,11 @@ HPGcamera *hpgMakeCamera(HPGcameraType type, HPGscene *scene){
     camera->object.x = 0.0;
     camera->object.y = 0.0;
     camera->object.z = 0.0;
-    camera->angle = 0.0;
+    camera->pan = 0.0;
     camera->tilt = 0.0;
     camera->roll = 0.0;
     camera->distance = 1.0;
+    hpmIdentityMat4(camera->rotation);
     if (type == HPG_ORTHO)
         camera->update = &hpgOrthoCamera;
     else
@@ -355,17 +356,16 @@ void hpgSetCameraPosition(HPGcamera *camera, float x, float y, float z){
     camera->position.z = z;
 }
 
-void hpgRotateCamera(HPGcamera *camera, float angle){
-    camera->style = POSITION;
-    camera->angle += angle;
+float *hpgCameraRotation(HPGcamera *camera){
+    return camera->rotation;
 }
 
-void hpgSetCameraRotation(HPGcamera *camera, float x, float y, float z, float angle){
-    camera->style = POSITION;
+// TODO is this really the best interface?
+void hpgSetCameraUp(HPGcamera *camera, float x, float y, float z){
+    camera->style = LOOK_AT;
     camera->up.x = x;
     camera->up.y = y;
     camera->up.z = z;
-    camera->angle = angle;
 }
 
 void hpgCameraLookAt(HPGcamera *camera, float x, float y, float z){
@@ -377,12 +377,12 @@ void hpgCameraLookAt(HPGcamera *camera, float x, float y, float z){
 
 void hpgPanCamera(HPGcamera *camera, float angle){
     camera->style = ORBIT;
-    camera->angle += angle;
+    camera->pan += angle;
 }
 
 void hpgSetCameraPan(HPGcamera *camera, float angle){
     camera->style = ORBIT;
-    camera->angle = angle;
+    camera->pan = angle;
 }
 
 void hpgTiltCamera(HPGcamera *camera, float angle){
