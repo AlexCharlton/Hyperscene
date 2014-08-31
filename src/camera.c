@@ -160,6 +160,7 @@ static int programSort(const void *a, const void *b){
     return 0;
 }
 
+// TODO testing!
 static void setSortFuns(Plane *plane, 
                         int (*alphaSort)(const void*, const void*),
                         int (*renderSort)(const void*, const void*)){
@@ -249,7 +250,7 @@ static void computePlanes(HPGcamera *camera){
 }
 
 void hpgRenderCamera(HPGcamera *camera){
-    currentCamera = *camera;
+    currentCamera = *camera; // Set current camera to this one
     HPGcamera *c = &currentCamera;
     float cameraMat[16], view[16];
     clearQueues();
@@ -279,7 +280,7 @@ void hpgRenderCamera(HPGcamera *camera){
     camera->scene->partitionInterface->doVisible(c->scene->partitionStruct,
                                                  c->planes, &addToQueue);
     renderQueues(c);
-    *camera = currentCamera;
+    *camera = currentCamera; // Copy currentCamera back into camera -> is this needed?
 }
 
 static void hpgOrthoCamera(int width, int height, HPGcamera *camera){
