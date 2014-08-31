@@ -31,12 +31,30 @@ float hpmDot(float ax, float ay, float az, float bx, float by, float bz){
     return ax*bx + ay*by + az*bz;
 }
 
+void hpmMat4VecMult(const float *mat, float *vec){
+    HPMmat4 *m = (HPMmat4 *) mat;
+    float x, y, z;
+    x = vec[0]; y = vec[1]; z = vec[2];
+    vec[0] = m->_11*x + m->_12*y + m->_13*z + m->_14;
+    vec[1] = m->_21*x + m->_22*y + m->_23*z + m->_24;
+    vec[2] = m->_31*x + m->_32*y + m->_33*z + m->_34;
+}
+
+void hpmMat4VecArrayMult(const float *mat, float *vec, size_t length, size_t stride){
+    int i;
+    stride = (stride) ? stride : 3 * sizeof(float);
+    for (i = 0; i < length; i++){
+        hpmMat4VecMult(mat, vec);
+        vec = ((float *) ((char *) vec + stride));
+    }
+}
+
 // Matrix operations
 static void initMat4(HPMmat4 *m){
   memset(m, 0, sizeof(HPMmat4));
 }
 
-static void copyMat4(float *dest, const float *source){
+void hpmCopyMat4(const float *source, float *dest){
     memcpy(dest, source, sizeof(float) * 16);
 }
 
@@ -94,7 +112,7 @@ void hpmTranslate(float x, float y, float z, float *mat){
     float trans[16], r[16];
     hpmTranslation(x, y, z, trans);
     hpmMultMat4(trans, mat, r);
-    copyMat4(mat, r);
+    hpmCopyMat4(r, mat);
 }
 
 void hpmXRotation(float rotation, float *mat){
@@ -115,7 +133,7 @@ void hpmRotateX(float rotation, float *mat){
     float rot[16], r[16];
     hpmXRotation(rotation, rot);
     hpmMultMat4(rot, mat, r);
-    copyMat4(mat, r);
+    hpmCopyMat4(r, mat);
 }
 
 void hpmYRotation(float rotation, float *mat){
@@ -136,7 +154,7 @@ void hpmRotateY(float rotation, float *mat){
     float rot[16], r[16];
     hpmYRotation(rotation, rot);
     hpmMultMat4(rot, mat, r);
-    copyMat4(mat, r);
+    hpmCopyMat4(r, mat);
 }
 
 void hpmZRotation(float rotation, float *mat){
@@ -157,7 +175,7 @@ void hpmRotateZ(float rotation, float *mat){
     float rot[16], r[16];
     hpmZRotation(rotation, rot);
     hpmMultMat4(rot, mat, r);
-    copyMat4(mat, r);
+    hpmCopyMat4(r, mat);
 }
 
 void hpmRotation(float x, float y, float z, float angle, float *mat){
@@ -198,7 +216,7 @@ void hpmRotate(float x, float y, float z, float angle, float *mat){
     float rot[16], r[16];
     hpmRotation(x, y, z, angle, rot);
     hpmMultMat4(rot, mat, r);
-    copyMat4(mat, r);
+    hpmCopyMat4(r, mat);
 }
 
 void hpmQuaternionRotation(float x, float y, float z, float w, float *mat){
@@ -233,7 +251,7 @@ void hpmRotateQuaternion(float x, float y, float z, float w, float *mat){
     float rot[16], r[16];
     hpmQuaternionRotation(x, y, z, w, rot);
     hpmMultMat4(rot, mat, r);
-    copyMat4(mat, r);
+    hpmCopyMat4(r, mat);
 }
 
 void hpmYPRRotation(float yaw, float pitch, float roll, float *mat){
@@ -263,7 +281,7 @@ void hpmRotateYPR(float yaw, float pitch, float roll, float *mat){
     float rot[16], r[16];
     hpmYPRRotation(yaw, pitch, roll, rot);
     hpmMultMat4(rot, mat, r);
-    copyMat4(mat, r);
+    hpmCopyMat4(r, mat);
 }
 
 void hpm2DScaling(float scaleX, float scaleY, float *mat){
@@ -278,7 +296,7 @@ void hpmScale2D(float scaleX, float scaleY, float *mat){
     float scale[16], r[16];
     hpm2DScaling(scaleX, scaleY, scale);
     hpmMultMat4(scale, mat, r);
-    copyMat4(mat, r);
+    hpmCopyMat4(r, mat);
 }
 
 void hpm3DScaling(float scaleX, float scaleY, float scaleZ, float *mat){
@@ -293,7 +311,7 @@ void hpmScale3D(float scaleX, float scaleY, float scaleZ, float *mat){
     float scale[16], r[16];
     hpm3DScaling(scaleX, scaleY, scaleZ, scale);
     hpmMultMat4(scale, mat, r);
-    copyMat4(mat, r);
+    hpmCopyMat4(r, mat);
 }
 
 void hpmScaling(float factor, float *mat){
@@ -309,7 +327,7 @@ void hpmScale(float factor, float *mat){
     float scale[16], r[16];
     hpmScaling(factor, scale);
     hpmMultMat4(scale, mat, r);
-    copyMat4(mat, r);
+    hpmCopyMat4(r, mat);
 }
 
 void hpmFlipX(float *mat){

@@ -11,6 +11,10 @@ None
 All matrices must be arrays of 16 floats.
 
 ### Matrix operations
+    void hpmCopyMat4(const float *source, float *dest);
+
+Copy the data from matrix `source` into `dest`.
+
     void hpmPrintMat4(const float *m);
 Print the given 4x4 matrix.
 
@@ -125,6 +129,13 @@ Return the result of the dot product between the vectors `(ax, ay, az)` and `(bx
     void hpmNormalize(float x, float y, float z, float *rx, float *ry, float *rz);
 Return the normalized vector `(x, y, z)`. The result is returned in `rx`, `ry`, and `rz`.
 
+    void hpmMat4VecMult(const float *matrix, float *vec);
+Multiply the 3 element vector by `matrix`, modifying it.
+
+    void hpmMat4VecArrayMult(const float *matrix, float *vectorArray, size_t length, size_t stride);
+Multiply each 3 element vector in `vectorArray` by `matrix`. `length` specifies the number of vectors in `vectorArray`. `stride` specifies the number of bytes between the start of two vectors. If `stride` is `0`, the vectors are assumed to be tightly packed.
+
+
 ### Angle operations
     float hpmDegreesToRadians(float deg);
 Convert degrees into radians.
@@ -134,6 +145,12 @@ Convert radians into degrees.
 
 
 ## Version history
+### Version 0.4.0
+* Export `hpmCopyMat4`
+
+### Version 0.3.0
+* Matrix vector multiplication
+
 ### Version 0.2.0
 * Each transformation function now has two variants: one that initializes a matrix, and one that operates on a matrix
 * Provide quaternion and YPR rotation

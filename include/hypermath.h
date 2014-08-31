@@ -8,6 +8,8 @@ typedef struct {
 	  _14, _24, _34, _44;
 } HPMmat4;
 
+void hpmCopyMat4(const float *source, float *dest);
+
 float hpmDegreesToRadians(float deg);
 
 float hpmRadiansToDegrees(float rad);
@@ -77,6 +79,10 @@ void hpmCross(float ax, float ay, float az, float bx, float by, float bz, float 
 void hpmNormalize(float x, float y, float z, float *rx, float *ry, float *rz);
 
 float hpmDot(float ax, float ay, float az, float bx, float by, float bz);
+
+void hpmMat4VecMult(const float *mat, float *vec);
+
+void hpmMat4VecArrayMult(const float *mat, float *vec, size_t length, size_t stride);
 
 // Projection
 void hpmOrtho(int width, int height, float near, float far, float *mat);
