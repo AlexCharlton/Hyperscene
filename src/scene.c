@@ -61,7 +61,8 @@ static void updateNode(HPGnode *node, HPGscene *scene, float x, float y, float z
 }
 
 static void initBoundingSphere(BoundingSphere *bs){
-    memset(bs, 0, 4 * sizeof(float));
+    memset(bs, 0, 3 * sizeof(float));
+    bs->r = 1;
 }
 
 static HPGscene *getScene(HPGnode *node){
