@@ -84,7 +84,7 @@ void hpgMoveCamera(HPGcamera *camera, float x, float y, float z);
 
 void hpgSetCameraPosition(HPGcamera *camera, float x, float y, float z);
 
-void hpgCameraRotation(HPGcamera *camera);
+float *hpgCameraRotation(HPGcamera *camera);
 
 void hpgSetCameraUp(HPGcamera *camera, float x, float y, float z);
 
