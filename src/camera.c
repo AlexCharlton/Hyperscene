@@ -263,16 +263,13 @@ void hpgRenderCamera(HPGcamera *camera){
         c->position.y = c->object.y + c->distance * sinTilt;
         c->position.z = c->object.z + c->distance * cosTilt * cosPan;
         hpmYPRRotation(c->pan, -c->tilt, c->roll, cameraMat);
-        hpmTranslate(c->position.x, c->position.y, c->position.z, cameraMat);
+        hpmTranslate((float *) &c->position, cameraMat);
         hpmCameraInverse(cameraMat, view);
     } else if (camera->style == LOOK_AT){
-        hpmLookAt(c->position.x, c->position.y, c->position.z,
-                  c->object.x, c->object.y, c->object.z, 
-                  c->up.x, c->up.y, c->up.z,
-                  view);
+        hpmLookAt((float *) &c->position, (float *) &c->object, (float *) &c->up, view);
     } else {
         hpmCopyMat4(c->rotation, cameraMat);
-        hpmTranslate(c->position.x, c->position.y, c->position.z, cameraMat);
+        hpmTranslate((float *) &c->position, cameraMat);
         hpmCameraInverse(cameraMat, view);
     }
     hpmMultMat4(c->projection, view, c->viewProjection);

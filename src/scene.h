@@ -36,14 +36,10 @@ struct scene {
     HPGpool nodePool, boundingSpherePool, transformPool, partitionPool;
 };
 
-typedef struct {
-    float x, y, z;
-} Point;
-
 struct camera {
     HPGscene *scene;
     CameraStyle style;
-    Point position, up, object;
+    HPMpoint position, up, object;
     float pan, tilt, roll, distance;
     float n, f, viewAngle;
     float rotation[16];

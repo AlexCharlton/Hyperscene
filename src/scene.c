@@ -27,36 +27,36 @@ static void freeNode(HPGnode *node, HPGscene *scene){
     }
 }
 
-static void updateNode(HPGnode *node, HPGscene *scene, float x, float y, float z){
+static void updateNode(HPGnode *node, HPGscene *scene, float x, float y, float z){//todo
     int i;
-    float nx, ny, nz;
-    nx = x + node->x;
-    ny = y + node->y;
-    nz = z + node->z;
+    float n[3];
+    n[0] = x + node->x;
+    n[1] = y + node->y;
+    n[2] = z + node->z;
     if (node->needsUpdate){
         BoundingSphere *bs = node->partitionData.boundingSphere;
-        bs->x = nx;
-        bs->y = ny;
-        bs->z = nz;
+        bs->x = n[0];
+        bs->y = n[1];
+        bs->z = n[2];
         if ((HPGscene *) node->parent == scene){
-            hpmRotation(node->rx, node->ry, node->rz, node->angle, node->transform);
-            hpmTranslate(nx, ny, nz, node->transform);
+            hpmAxisAngleRotation(&node->rx, node->angle, node->transform);//todo
+            hpmTranslate(n, node->transform);
         } else {
             float trans[16];
-            hpmRotation(node->rx, node->ry, node->rz, node->angle, trans);
-            hpmTranslate(nx, ny, nz, trans);
+            hpmAxisAngleRotation(&node->rx, node->angle, trans); //todo
+            hpmTranslate(n, trans);
             hpmMultMat4(trans, node->parent->transform, node->transform);
         }
 	scene->partitionInterface->updateNode(&node->partitionData);
         for (i = 0; i < node->children.size; i++){
             HPGnode *child = hpgVectorValue(&node->children, i);
             child->needsUpdate = true;
-            updateNode(child, scene, nx, ny, nz);
+            updateNode(child, scene, n[0], n[1], n[2]);//todo
         }
         node->needsUpdate = false;
     } else {
         for (i = 0; i < node->children.size; i++)
-            updateNode(hpgVectorValue(&node->children, i), scene, nx, ny, nz);
+            updateNode(hpgVectorValue(&node->children, i), scene, n[0], n[1], n[2]);//todo
     }
 }
 
@@ -116,21 +116,21 @@ void hpgSetBoundingSphere(HPGnode *node, float radius){
     node->needsUpdate = true;
 }
 
-void hpgMoveNode(HPGnode *node, float x, float y, float z){
+void hpgMoveNode(HPGnode *node, float x, float y, float z){//todo
     node->x += x;
     node->y += y;
     node->z += z;
     node->needsUpdate = true;
 }
 
-void hpgSetNodePosition(HPGnode *node, float x, float y, float z){
+void hpgSetNodePosition(HPGnode *node, float x, float y, float z){//todo
     node->x = x;
     node->y = y;
     node->z = z;
     node->needsUpdate = true;
 }
 
-void hpgSetNodeRotation(HPGnode *node, float x, float y, float z, float angle){
+void hpgSetNodeRotation(HPGnode *node, float x, float y, float z, float angle){//todo
     node->rx = x;
     node->ry = y;
     node->rz = z;
@@ -138,7 +138,7 @@ void hpgSetNodeRotation(HPGnode *node, float x, float y, float z, float angle){
     node->needsUpdate = true;
 }
 
-void hpgRotateNode(HPGnode *node, float angle){
+void hpgRotateNode(HPGnode *node, float angle){ //todo
     node->angle = angle;
     node->needsUpdate = true;
 }
