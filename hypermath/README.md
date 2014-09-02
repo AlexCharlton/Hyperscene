@@ -188,6 +188,8 @@ Multiply each 3 element vector in `vectorArray` by `matrix`. `length` specifies 
 ### Quaternion operations
 Quaternions are expected to be normalized before they are used in certain functions (`hpmQuatNormalize` may be used to do so). All the provided functions that create quaternions, create unit quaternions. 
 
+The order of quaternion cross-multiplication is the inverse of the “standard” order, so a quaternion that has undergone a series or rotations will represent the same rotation as a marix that has gone through the same series, in the same order.
+
     void hpmCopyQuat(const float *source, float *dest);
 
 Copy the quaternion `source` into `dest`.
