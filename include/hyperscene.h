@@ -8,6 +8,11 @@ typedef enum {
     HPG_ORTHO, HPG_PERSPECTIVE
 } HPGcameraType;
 
+typedef enum {
+    POSITION, LOOK_AT, ORBIT
+} HPGcameraStyle;
+
+
 typedef struct node HPGnode;
 typedef struct scene HPGscene;
 typedef struct camera HPGcamera;
@@ -28,15 +33,11 @@ void hpgDeleteNode(HPGnode *node);
 
 void hpgSetBoundingSphere(HPGnode *node, float radius);
 
-void hpgMoveNode(HPGnode *node, float x, float y, float z);
+void hpgMoveNode(HPGnode *node, float *vec);
 
-void hpgSetNodePosition(HPGnode *node, float x, float y, float z);
+void hpgSetNodePosition(HPGnode *node, float *p);
 
-void hpgSetNodeRotation(HPGnode *node, float x, float y, float z, float angle);
-
-void hpgRotateNode(HPGnode *node, float angle);
-
-float* hpgNodeTransform(HPGnode *node);
+float* hpgNodeRotation(HPGnode *node);
 
 float* hpgNodeData(HPGnode *node);
 
@@ -72,7 +73,7 @@ float *hpgCurrentCameraModelViewProjection();
 
 void hpgRenderCamera(HPGcamera *camera);
 
-HPGcamera *hpgMakeCamera(HPGcameraType type, HPGscene *scene);
+HPGcamera *hpgMakeCamera(HPGcameraType type, HPGcameraStyle style, HPGscene *scene);
 
 void hpgSetCameraClipPlanes(HPGcamera *camera, float near, float far);
 
@@ -80,15 +81,15 @@ void hpgSetCameraViewAngle(HPGcamera *camera, float angle);
 
 void hpgDeleteCamera(HPGcamera *camera);
 
-void hpgMoveCamera(HPGcamera *camera, float x, float y, float z);
+void hpgMoveCamera(HPGcamera *camera, float *vec);
 
-void hpgSetCameraPosition(HPGcamera *camera, float x, float y, float z);
+void hpgSetCameraPosition(HPGcamera *camera, float *vec);
 
 float *hpgCameraRotation(HPGcamera *camera);
 
-void hpgSetCameraUp(HPGcamera *camera, float x, float y, float z);
+void hpgSetCameraUp(HPGcamera *camera, float *up);
 
-void hpgCameraLookAt(HPGcamera *camera, float x, float y, float z);
+void hpgCameraLookAt(HPGcamera *camera, float *p);
 
 void hpgPanCamera(HPGcamera *camera, float angle);
 

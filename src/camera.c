@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <float.h>
 #include "scene.h"
@@ -255,20 +256,20 @@ void hpgRenderCamera(HPGcamera *camera){
     float cameraMat[16], view[16];
     clearQueues();
     if (camera->style == ORBIT){
-        float cosTilt = cos(c->tilt);
-        float sinTilt = sin(c->tilt);
-        float sinPan = sin(c->pan);
-        float cosPan = cos(c->pan);
-        c->position.x = c->object.x + c->distance * cosTilt * sinPan;
-        c->position.y = c->object.y + c->distance * sinTilt;
-        c->position.z = c->object.z + c->distance * cosTilt * cosPan;
-        hpmYPRRotation(c->pan, -c->tilt, c->roll, cameraMat);
+        float cosTilt = cos(c->rotation.y);
+        float sinTilt = sin(c->rotation.y);
+        float sinPan = sin(c->rotation.x);
+        float cosPan = cos(c->rotation.x);
+        c->position.x = c->object.x + c->rotation.w * cosTilt * sinPan;
+        c->position.y = c->object.y + c->rotation.w * sinTilt;
+        c->position.z = c->object.z + c->rotation.w * cosTilt * cosPan;
+        hpmYPRRotation(c->rotation.x, -c->rotation.y, c->rotation.z, cameraMat);
         hpmTranslate((float *) &c->position, cameraMat);
         hpmCameraInverse(cameraMat, view);
     } else if (camera->style == LOOK_AT){
         hpmLookAt((float *) &c->position, (float *) &c->object, (float *) &c->up, view);
     } else {
-        hpmCopyMat4(c->rotation, cameraMat);
+        hpmQuaternionRotation((float *) &c->rotation, cameraMat);
         hpmTranslate((float *) &c->position, cameraMat);
         hpmCameraInverse(cameraMat, view);
     }
@@ -289,7 +290,7 @@ static void hpgPerspectiveCamera(int width, int height, HPGcamera *camera){
 		   camera->projection);
 }
 
-HPGcamera *hpgMakeCamera(HPGcameraType type, HPGscene *scene){
+HPGcamera *hpgMakeCamera(HPGcameraType type, HPGcameraStyle style, HPGscene *scene){
     HPGcamera *camera = malloc(sizeof(struct camera));
     camera->n = HPG_DEFAULT_NEAR_PLANE;
     camera->f = HPG_DEFAULT_FAR_PLANE;
@@ -303,16 +304,15 @@ HPGcamera *hpgMakeCamera(HPGcameraType type, HPGscene *scene){
     camera->object.x = 0.0;
     camera->object.y = 0.0;
     camera->object.z = 0.0;
-    camera->pan = 0.0;
-    camera->tilt = 0.0;
-    camera->roll = 0.0;
-    camera->distance = 1.0;
-    hpmIdentityMat4(camera->rotation);
+    camera->rotation.x = 0;
+    camera->rotation.y = 0;
+    camera->rotation.z = 0;
+    camera->rotation.w = 1;
     if (type == HPG_ORTHO)
         camera->update = &hpgOrthoCamera;
     else
         camera->update = &hpgPerspectiveCamera;
-    camera->style = POSITION;
+    camera->style = style;
     camera->scene = scene;
     hpgPush(&cameraList, (void *) camera);
     hpgPush(&activeCameras, (void *) camera);
@@ -342,77 +342,119 @@ void hpgDeleteCamera(HPGcamera *camera){
     free(camera);
 }
 
-void hpgMoveCamera(HPGcamera *camera, float x, float y, float z){
-    camera->position.x += x;
-    camera->position.y += y;
-    camera->position.z += z;
+void hpgMoveCamera(HPGcamera *camera, float *vec){
+    if (camera->style == ORBIT){
+        fprintf(stderr, "Can't move an orbit camera\n");
+        return;
+    }
+    camera->position.x += vec[0];
+    camera->position.y += vec[1];
+    camera->position.z += vec[2];
 }
 
-void hpgSetCameraPosition(HPGcamera *camera, float x, float y, float z){
-    camera->position.x = x;
-    camera->position.y = y;
-    camera->position.z = z;
+void hpgSetCameraPosition(HPGcamera *camera, float *vec){
+    if (camera->style == ORBIT){
+        fprintf(stderr, "Can't move an ORBIT camera\n");
+        return;
+    }
+    camera->position.x = vec[0];
+    camera->position.y = vec[1];
+    camera->position.z = vec[2];
 }
 
 float *hpgCameraRotation(HPGcamera *camera){
-    return camera->rotation;
+    if (camera->style != POSITION){
+        fprintf(stderr, "Can't rotation a non POSITION camera\n");
+        return NULL;
+    }
+    return (float *) &camera->rotation;
 }
 
-// TODO is this really the best interface?
-void hpgSetCameraUp(HPGcamera *camera, float x, float y, float z){
-    camera->style = LOOK_AT;
-    camera->up.x = x;
-    camera->up.y = y;
-    camera->up.z = z;
+void hpgSetCameraUp(HPGcamera *camera, float *up){
+    if (camera->style != LOOK_AT){
+        fprintf(stderr, "Can't set up on a non LOOK_AT camera\n");
+        return;
+    }
+    camera->up.x = up[0];
+    camera->up.y = up[1];
+    camera->up.z = up[2];
 }
 
-void hpgCameraLookAt(HPGcamera *camera, float x, float y, float z){
-    camera->style = LOOK_AT;
-    camera->object.x = x;
-    camera->object.y = y;
-    camera->object.z = z;
+void hpgCameraLookAt(HPGcamera *camera, float *p){
+    if (camera->style != LOOK_AT){
+        fprintf(stderr, "Can't set object to look at on a non LOOK_AT camera\n");
+        return;
+    }
+    camera->object.x = p[0];
+    camera->object.y = p[1];
+    camera->object.z = p[2];
 }
 
 void hpgPanCamera(HPGcamera *camera, float angle){
-    camera->style = ORBIT;
-    camera->pan += angle;
+    if (camera->style != ORBIT){
+        fprintf(stderr, "Can't pan a non ORBIT camera\n");
+        return;
+    }
+    camera->rotation.x += angle;
 }
 
 void hpgSetCameraPan(HPGcamera *camera, float angle){
+    if (camera->style != ORBIT){
+        fprintf(stderr, "Can't pan a non ORBIT camera\n");
+        return;
+    }
     camera->style = ORBIT;
-    camera->pan = angle;
+    camera->rotation.x = angle;
 }
 
 void hpgTiltCamera(HPGcamera *camera, float angle){
-    camera->style = ORBIT;
-    camera->tilt += angle;
-    camera->tilt = fmin(HALF_PI, fmax(-HALF_PI, camera->tilt));
+    if (camera->style != ORBIT){
+        fprintf(stderr, "Can't tilt a non ORBIT camera\n");
+        return;
+    }
+    camera->rotation.y += angle;
+    camera->rotation.y = fmin(HALF_PI, fmax(-HALF_PI, camera->rotation.y));
 }
 
 void hpgSetCameraTilt(HPGcamera *camera, float angle){
-    camera->style = ORBIT;
-    camera->tilt = fmin(HALF_PI, fmax(-HALF_PI, angle));
+    if (camera->style != ORBIT){
+        fprintf(stderr, "Can't tilt a non ORBIT camera\n");
+        return;
+    }
+    camera->rotation.y = fmin(HALF_PI, fmax(-HALF_PI, angle));
 }
 
 void hpgZoomCamera(HPGcamera *camera, float distance){
-    camera->style = ORBIT;
-    camera->distance += distance;
-    camera->distance = (camera->distance < FLT_MIN) ? FLT_MIN : camera->distance;
+    if (camera->style != ORBIT){
+        fprintf(stderr, "Can't zoom a non ORBIT camera\n");
+        return;
+    }
+    camera->rotation.w += distance;
+    camera->rotation.w = (camera->rotation.w < FLT_MIN) ? FLT_MIN : camera->rotation.w;
 }
 
 void hpgSetCameraZoom(HPGcamera *camera, float distance){
-    camera->style = ORBIT;
-    camera->distance = (distance < 0.0) ? 0.0 : distance;
+    if (camera->style != ORBIT){
+        fprintf(stderr, "Can't zoom a non ORBIT camera\n");
+        return;
+    }
+    camera->rotation.w = (distance < 0.0) ? 0.0 : distance;
 }
 
 void hpgRollCamera(HPGcamera *camera, float angle){
-    camera->style = ORBIT;
-    camera->roll += angle;
+    if (camera->style != ORBIT){
+        fprintf(stderr, "Can't roll a non ORBIT camera\n");
+        return;
+    }
+    camera->rotation.z += angle;
 }
 
 void hpgSetCameraRoll(HPGcamera *camera, float angle){
-    camera->style = ORBIT;
-    camera->roll = angle;
+    if (camera->style != ORBIT){
+        fprintf(stderr, "Can't roll a non ORBIT camera\n");
+        return;
+    }
+    camera->rotation.z = angle;
 }
 
 void hpgResizeCameras(int width, int height){

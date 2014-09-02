@@ -27,36 +27,30 @@ static void freeNode(HPGnode *node, HPGscene *scene){
     }
 }
 
-static void updateNode(HPGnode *node, HPGscene *scene, float x, float y, float z){//todo
+static void updateNode(HPGnode *node, HPGscene *scene){
     int i;
-    float n[3];
-    n[0] = x + node->x;
-    n[1] = y + node->y;
-    n[2] = z + node->z;
     if (node->needsUpdate){
         BoundingSphere *bs = node->partitionData.boundingSphere;
-        bs->x = n[0];
-        bs->y = n[1];
-        bs->z = n[2];
+// TODO bounding sphere should be transformed based on parent's transform
         if ((HPGscene *) node->parent == scene){
-            hpmAxisAngleRotation(&node->rx, node->angle, node->transform);//todo
-            hpmTranslate(n, node->transform);
+            hpmQuaternionRotation((float *) &node->rotation, node->transform);
+            hpmTranslate((float *) &node->position, node->transform);
         } else {
             float trans[16];
-            hpmAxisAngleRotation(&node->rx, node->angle, trans); //todo
-            hpmTranslate(n, trans);
+            hpmQuaternionRotation((float *) &node->rotation, trans);
+            hpmTranslate((float *) &node->position, trans);
             hpmMultMat4(trans, node->parent->transform, node->transform);
         }
 	scene->partitionInterface->updateNode(&node->partitionData);
         for (i = 0; i < node->children.size; i++){
             HPGnode *child = hpgVectorValue(&node->children, i);
             child->needsUpdate = true;
-            updateNode(child, scene, n[0], n[1], n[2]);//todo
+            updateNode(child, scene);
         }
         node->needsUpdate = false;
     } else {
         for (i = 0; i < node->children.size; i++)
-            updateNode(hpgVectorValue(&node->children, i), scene, n[0], n[1], n[2]);//todo
+            updateNode(hpgVectorValue(&node->children, i), scene);
     }
 }
 
@@ -81,8 +75,9 @@ HPGnode *hpgAddNode(HPGnode *parent, void *data,
     node->partitionData.boundingSphere = hpgAllocateFrom(scene->boundingSpherePool);
     hpmIdentityMat4(node->transform);
     initBoundingSphere(node->partitionData.boundingSphere);
-    node->x = 0.0; node->y = 0.0; node->z = 0.0;
-    node->rx = 0.0; node->ry = 0.0; node->rz = 1.0; node->angle = 0.0;
+    node->position.x = 0.0; node->position.y = 0.0; node->position.z = 0.0;
+    node->rotation.x = 0.0; node->rotation.y = 0.0; node->rotation.z = 0.0; 
+    node->rotation.w = 1.0;
     node->data = data;
     node->pipeline = pipeline;
     node->parent = parent;
@@ -116,35 +111,22 @@ void hpgSetBoundingSphere(HPGnode *node, float radius){
     node->needsUpdate = true;
 }
 
-void hpgMoveNode(HPGnode *node, float x, float y, float z){//todo
-    node->x += x;
-    node->y += y;
-    node->z += z;
+void hpgMoveNode(HPGnode *node, float *vec){
+    node->position.x += vec[0];
+    node->position.y += vec[1];
+    node->position.z += vec[2];
     node->needsUpdate = true;
 }
 
-void hpgSetNodePosition(HPGnode *node, float x, float y, float z){//todo
-    node->x = x;
-    node->y = y;
-    node->z = z;
+void hpgSetNodePosition(HPGnode *node, float *p){
+    node->position.x = p[0];
+    node->position.y = p[1];
+    node->position.z = p[2];
     node->needsUpdate = true;
 }
 
-void hpgSetNodeRotation(HPGnode *node, float x, float y, float z, float angle){//todo
-    node->rx = x;
-    node->ry = y;
-    node->rz = z;
-    node->angle = angle;
-    node->needsUpdate = true;
-}
-
-void hpgRotateNode(HPGnode *node, float angle){ //todo
-    node->angle = angle;
-    node->needsUpdate = true;
-}
-
-float* hpgNodeTransform(HPGnode *node){
-    return node->transform;
+float* hpgNodeRotation(HPGnode *node){
+    return (float *) &node->rotation;
 }
 
 float* hpgNodeData(HPGnode *node){
@@ -195,7 +177,7 @@ void hpgDeactiveateScene(HPGscene *s){
 static void hpgUpdateScene(HPGscene *scene){
     int i;
     for (i = 0; i < scene->topLevelNodes.size; i++)
-        updateNode(hpgVectorValue(&scene->topLevelNodes, i), scene, 0.0, 0.0, 0.0);
+        updateNode(hpgVectorValue(&scene->topLevelNodes, i), scene);
 }
 
 void hpgUpdateScenes(){
