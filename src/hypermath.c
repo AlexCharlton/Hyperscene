@@ -128,9 +128,9 @@ void hpmQuatCross(const float *quatA, const float *quatB, float *result){
     HPMquat *a = (HPMquat *) quatA;
     HPMquat *b = (HPMquat *) quatB;
     HPMquat *r = (HPMquat *) result;
-    r->x = a->w*b->x + a->x*b->w + a->z*b->y - a->y*b->z;
-    r->y = a->w*b->y + a->y*b->w + a->x*b->z - a->z*b->x;
-    r->z = a->w*b->z + a->z*b->w + a->y*b->x - a->x*b->y;
+    r->x = a->w*b->x + a->x*b->w + a->y*b->z - a->z*b->y;
+    r->y = a->w*b->y + a->y*b->w + a->z*b->x - a->x*b->z;
+    r->z = a->w*b->z + a->z*b->w + a->x*b->y - a->y*b->x;
     r->w = a->w*b->w - a->x*b->x - a->y*b->y - a->z*b->z;
 }
 
@@ -143,8 +143,8 @@ void hpmQuatVecRotate(const float *quat, float *point){
     p.z = pt->z;
     p.w = 0;
     hpmQuatInverse(quat, i);
-    hpmQuatCross((float *) &p, i, r);
-    hpmQuatCross(quat, r, i);
+    hpmQuatCross(i, (float *) &p, r);
+    hpmQuatCross(r, quat, i);
     pt->x = i[0];
     pt->y = i[1];
     pt->z = i[2];
