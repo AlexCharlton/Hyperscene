@@ -12,32 +12,74 @@ float hpmRadiansToDegrees(float rad){
     return rad * 57.2957795;
 }
 
+
 // Vector operations
-void hpmCross(float ax, float ay, float az, float bx, float by, float bz,
-              float *rx, float *ry, float *rz){
-    *rx = ay*bz - az*by;
-    *ry = az*bx - ax*bz;
-    *rz = ax*by - ay*bx;
+void hpmCopyVec(const float *source, float *dest){
+    memcpy(dest, source, sizeof(float) * 3);
 }
 
-void hpmNormalize(float x, float y, float z, float *rx, float *ry, float *rz){
-    float len = sqrt(x*x + y*y + z*z);
-    *rx = x / len;
-    *ry = y / len;
-    *rz = z / len;
+void hpmMultVec(const float *pointA, float m, float *result){
+    HPMpoint *a = (HPMpoint *) pointA;
+    HPMpoint *r = (HPMpoint *) result;
+    r->x = a->x * m;
+    r->y = a->y * m;
+    r->z = a->z * m;
 }
 
-float hpmDot(float ax, float ay, float az, float bx, float by, float bz){
-    return ax*bx + ay*by + az*bz;
+void hpmAddVec(const float *pointA, const float *pointB, float *result){
+    HPMpoint *a = (HPMpoint *) pointA;
+    HPMpoint *b = (HPMpoint *) pointB;
+    HPMpoint *r = (HPMpoint *) result;
+    r->x = a->x + b->x;
+    r->y = a->y + b->y;
+    r->z = a->z + b->z;
 }
 
-void hpmMat4VecMult(const float *mat, float *vec){
+void hpmSubVec(const float *pointA, const float *pointB, float *result){
+    HPMpoint *a = (HPMpoint *) pointA;
+    HPMpoint *b = (HPMpoint *) pointB;
+    HPMpoint *r = (HPMpoint *) result;
+    r->x = a->x - b->x;
+    r->y = a->y - b->y;
+    r->z = a->z - b->z;
+}
+
+void hpmCross(const float *pointA, const float *pointB, float *result){
+    HPMpoint *a = (HPMpoint *) pointA;
+    HPMpoint *b = (HPMpoint *) pointB;
+    HPMpoint *r = (HPMpoint *) result;
+    r->x = a->y*b->z - a->z*b->y;
+    r->y = a->z*b->x - a->x*b->z;
+    r->z = a->x*b->y - a->y*b->x;
+}
+
+float hpmMagnitude(const float *point){
+    HPMpoint *p = (HPMpoint *) point;
+    return sqrt(p->x*p->x + p->y*p->y + p->z*p->z);
+}
+
+void hpmNormalize(float *point){
+    HPMpoint *p = (HPMpoint *) point;
+    float len = hpmMagnitude(point);
+    p->x = p->x / len;
+    p->y = p->y / len;
+    p->z = p->z / len;
+}
+
+float hpmDot(const float *pointA, const float *pointB){
+    HPMpoint *a = (HPMpoint *) pointA;
+    HPMpoint *b = (HPMpoint *) pointB;
+    return a->x*b->x + a->y*b->y + a->z*b->z;
+}
+
+void hpmMat4VecMult(const float *mat, float *point){
     HPMmat4 *m = (HPMmat4 *) mat;
+    HPMpoint *p = (HPMpoint *) point;
     float x, y, z;
-    x = vec[0]; y = vec[1]; z = vec[2];
-    vec[0] = m->_11*x + m->_12*y + m->_13*z + m->_14;
-    vec[1] = m->_21*x + m->_22*y + m->_23*z + m->_24;
-    vec[2] = m->_31*x + m->_32*y + m->_33*z + m->_34;
+    x = p->x; y = p->y; z = p->z;
+    p->x = m->_11*x + m->_12*y + m->_13*z + m->_14;
+    p->y = m->_21*x + m->_22*y + m->_23*z + m->_24;
+    p->z = m->_31*x + m->_32*y + m->_33*z + m->_34;
 }
 
 void hpmMat4VecArrayMult(const float *mat, float *vec, size_t length, size_t stride){
@@ -48,6 +90,167 @@ void hpmMat4VecArrayMult(const float *mat, float *vec, size_t length, size_t str
         vec = ((float *) ((char *) vec + stride));
     }
 }
+
+void hpmLerp(const float *pointA, const float *pointB, float t, float *result){
+    HPMpoint *a = (HPMpoint *) pointA;
+    HPMpoint *b = (HPMpoint *) pointB;
+    HPMpoint *r = (HPMpoint *) result;
+    float t0 = 1 - t;
+    r->x = a->x*t0 + b->x*t;
+    r->y = a->y*t0 + b->y*t;
+    r->z = a->z*t0 + b->z*t;
+}
+
+// Quaternion operations
+void hpmCopyQuat(const float *source, float *dest){
+    memcpy(dest, source, sizeof(float) * 4);
+}
+
+void hpmQuatNormalize(float *quat){
+    HPMquat *q = (HPMquat *) quat;
+    float mag = sqrt(q->x*q->x + q->y*q->y + q->z*q->z + q->w*q->w);
+    q->x = q->x / mag;
+    q->y = q->y / mag;
+    q->z = q->z / mag;
+    q->w = q->w / mag;
+}
+
+void hpmQuatInverse(const float *quat, float *inv){
+    HPMquat *q = (HPMquat *) quat;
+    HPMquat *i = (HPMquat *) inv;
+    i->x = -q->x;
+    i->y = -q->y;
+    i->z = -q->z;
+    i->w = q->w;
+}
+
+void hpmQuatCross(const float *quatA, const float *quatB, float *result){
+    HPMquat *a = (HPMquat *) quatA;
+    HPMquat *b = (HPMquat *) quatB;
+    HPMquat *r = (HPMquat *) result;
+    r->x = a->w*b->x + a->x*b->w + a->z*b->y - a->y*b->z;
+    r->y = a->w*b->y + a->y*b->w + a->x*b->z - a->z*b->x;
+    r->z = a->w*b->z + a->z*b->w + a->y*b->x - a->x*b->y;
+    r->w = a->w*b->w - a->x*b->x - a->y*b->y - a->z*b->z;
+}
+
+void hpmQuatVecRotate(const float *quat, float *point){
+    float r[4], i[4];
+    HPMpoint *pt = (HPMpoint *) point;
+    HPMquat p;
+    p.x = pt->x;
+    p.y = pt->y;
+    p.z = pt->z;
+    p.w = 0;
+    hpmQuatInverse(quat, i);
+    hpmQuatCross((float *) &p, i, r);
+    hpmQuatCross(quat, r, i);
+    pt->x = i[0];
+    pt->y = i[1];
+    pt->z = i[2];
+}
+
+void hpmAxisAngleQuatRotation(float *axis, float angle, float *quat){
+    HPMquat *q = (HPMquat *) quat;
+    HPMpoint *a = (HPMpoint *) axis;
+    float s = sin(angle/2.0);
+    q->x = s*a->x;
+    q->y = s*a->y;
+    q->z = s*a->z;
+    q->w = cos(angle/2.0);
+}
+
+void hpmRotateQuatAxisAngle(float *axis, float angle, float *quat){
+    float rot[4], r[4];
+    hpmAxisAngleQuatRotation(axis, angle, rot);
+    hpmQuatCross(rot, quat, r);
+    hpmCopyQuat(r, quat);
+}
+
+void hpmXQuatRotation(float angle, float *quat){
+    float a[3];
+    a[0] = 1; a[1] = 0; a[2] = 0;
+    hpmAxisAngleQuatRotation(a, angle, quat);
+}
+
+void hpmRotateQuatX(float angle, float *quat){
+    if (angle == 0.0) return;
+    float rot[4], r[4];
+    hpmXQuatRotation(angle, rot);
+    hpmQuatCross(rot, quat, r);
+    hpmCopyQuat(r, quat);
+}
+
+void hpmYQuatRotation(float angle, float *quat){
+    float a[3];
+    a[0] = 0; a[1] = 1; a[2] = 0;
+    hpmAxisAngleQuatRotation(a, angle, quat);
+}
+
+void hpmRotateQuatY(float angle, float *quat){
+    if (angle == 0.0) return;
+    float rot[4], r[4];
+    hpmYQuatRotation(angle, rot);
+    hpmQuatCross(rot, quat, r);
+    hpmCopyQuat(r, quat);
+}
+
+void hpmZQuatRotation(float angle, float *quat){
+    float a[3];
+    a[0] = 0; a[1] = 0; a[2] = 1;
+    hpmAxisAngleQuatRotation(a, angle, quat);
+}
+
+void hpmRotateQuatZ(float angle, float *quat){
+    if (angle == 0.0) return;
+    float rot[4], r[4];
+    hpmZQuatRotation(angle, rot);
+    hpmQuatCross(rot, quat, r);
+    hpmCopyQuat(r, quat);
+}
+
+void hpmYPRQuatRotation(float yaw, float pitch, float roll, float *quat){
+    hpmZQuatRotation(roll, quat);
+    hpmRotateQuatX(pitch, quat);
+    hpmRotateQuatY(yaw, quat);
+}
+
+void hpmRotateQuatYPR(float yaw, float pitch, float roll, float *quat){
+    float rot[4], r[4];
+    hpmYPRQuatRotation(yaw, pitch, roll, rot);
+    hpmQuatCross(rot, quat, r);
+    hpmCopyQuat(r, quat);
+}
+
+void hpmSlerp(const float *quatA, const float *quatB, float t, float *result){
+    HPMquat *a = (HPMquat *) quatA;
+    HPMquat *b = (HPMquat *) quatB;
+    HPMquat *r = (HPMquat *) result;
+    float cosOmega = a->x*b->x + a->y*b->y + a->z*b->z + a->w*b->w;
+    if (cosOmega < 0){
+        b->x = -b->x;
+        b->y = -b->y;
+        b->z = -b->z;
+        b->w = -b->w;
+        cosOmega = -cosOmega;
+    }
+    float ka, kb;
+    if (cosOmega > 0.9999){ // Linear interpolation when close
+        ka = 1-t;
+        kb = t;
+    } else {
+        float sinOmega = sqrt(1 - cosOmega*cosOmega);
+        float omega = atan2(sinOmega, cosOmega);
+        float oneOverSinOmega = 1/sinOmega;
+        ka = sin((1-t) * omega) *oneOverSinOmega;
+        kb = sin(t * omega) *oneOverSinOmega;
+    }
+    r->x = a->x*ka + b->x*kb;
+    r->y = a->y*ka + b->y*kb;
+    r->z = a->z*ka + b->z*kb;
+    r->w = a->w*ka + b->w*kb;
+}
+
 
 // Matrix operations
 static void initMat4(HPMmat4 *m){
@@ -100,17 +303,18 @@ void hpmMultMat4(const float *matA, const float *matB, float *result){
     r->_44 = a->_41*b->_14 + a->_42*b->_24 + a->_43*b->_34 + a->_44*b->_44;
 }
 
-void hpmTranslation(float x, float y, float z, float *mat){
+void hpmTranslation(float *vector, float *mat){
     hpmIdentityMat4(mat);
     HPMmat4 *m = (HPMmat4 *) mat;
-    m->_14 += x;
-    m->_24 += y;
-    m->_34 += z;
+    HPMpoint *p = (HPMpoint *) vector;
+    m->_14 += p->x;
+    m->_24 += p->y;
+    m->_34 += p->z;
 }
 
-void hpmTranslate(float x, float y, float z, float *mat){
+void hpmTranslate(float *vector, float *mat){
     float trans[16], r[16];
-    hpmTranslation(x, y, z, trans);
+    hpmTranslation(vector, trans);
     hpmMultMat4(trans, mat, r);
     hpmCopyMat4(r, mat);
 }
@@ -178,23 +382,24 @@ void hpmRotateZ(float rotation, float *mat){
     hpmCopyMat4(r, mat);
 }
 
-void hpmRotation(float x, float y, float z, float angle, float *mat){
+void hpmAxisAngleRotation(float *axis, float angle, float *mat){
     HPMmat4 *m = (HPMmat4 *) mat;
+    HPMpoint *a = (HPMpoint *) axis;
     initMat4(m);
     float c = cos(angle);
     float s = sin(angle);
     float C = 1 - c;
     float xx, xy, xz, yy, yz, zz, xs, ys, zs;
-    hpmNormalize(x, y, z, &x, &y, &z);
-    xx = x * x;
-    xy = x * y;
-    xz = x * z;
-    yy = y * y;
-    yz = y * z;
-    zz = z * z;
-    xs = x * s;
-    ys = y * s;
-    zs = z * s;
+    hpmNormalize(axis);
+    xx = a->x * a->x;
+    xy = a->x * a->y;
+    xz = a->x * a->z;
+    yy = a->y * a->y;
+    yz = a->y * a->z;
+    zz = a->z * a->z;
+    xs = a->x * s;
+    ys = a->y * s;
+    zs = a->z * s;
     
     m->_11 = xx*C + c;
     m->_12 = xy*C - zs;
@@ -211,27 +416,28 @@ void hpmRotation(float x, float y, float z, float angle, float *mat){
     m->_44 = 1.0;
 }
 
-void hpmRotate(float x, float y, float z, float angle, float *mat){
+void hpmRotateAxisAngle(float *axis, float angle, float *mat){
     if (angle == 0.0) return;
     float rot[16], r[16];
-    hpmRotation(x, y, z, angle, rot);
+    hpmAxisAngleRotation(axis, angle, rot);
     hpmMultMat4(rot, mat, r);
     hpmCopyMat4(r, mat);
 }
 
-void hpmQuaternionRotation(float x, float y, float z, float w, float *mat){
+void hpmQuaternionRotation(float* quat, float *mat){
     HPMmat4 *m = (HPMmat4 *) mat;
+    HPMquat *q = (HPMquat *) quat;
     initMat4(m);
     float xx, xy, xz, xw, yy, yz, yw, zz, zw;
-    xx = x * x;
-    xy = x * y;
-    xz = x * z;
-    xw = x * w;
-    yy = y * y;
-    yz = y * z;
-    yw = y * w;
-    zz = z * z;
-    zw = z * w;
+    xx = q->x * q->x;
+    xy = q->x * q->y;
+    xz = q->x * q->z;
+    xw = q->x * q->w;
+    yy = q->y * q->y;
+    yz = q->y * q->z;
+    yw = q->y * q->w;
+    zz = q->z * q->z;
+    zw = q->z * q->w;
     m->_11 = 1.0 - (2.0 * (zz + yy));
     m->_12 = 2.0 * (xy - zw);
     m->_13 = 2.0 * (xz + yw);
@@ -247,9 +453,9 @@ void hpmQuaternionRotation(float x, float y, float z, float w, float *mat){
     m->_44 = 1.0;
 }
 
-void hpmRotateQuaternion(float x, float y, float z, float w, float *mat){
+void hpmRotateQuaternion(float *quat, float *mat){
     float rot[16], r[16];
-    hpmQuaternionRotation(x, y, z, w, rot);
+    hpmQuaternionRotation(quat, rot);
     hpmMultMat4(rot, mat, r);
     hpmCopyMat4(r, mat);
 }
@@ -345,9 +551,9 @@ void hpmFlipZ(float *mat){
     m->_33 = -m->_33;
 }
 
-void hpmTranslateRotateScale2D(float x, float y, float z, float angle, float scale,
-			        float *mat){
+void hpmTranslateRotateScale2D(float *point, float angle, float scale, float *mat){
     HPMmat4 *m = (HPMmat4 *) mat;
+    HPMpoint *p = (HPMpoint *) point;
     initMat4(m);
     float c = scale * cos(angle);
     float s = scale * sin(angle);
@@ -357,9 +563,9 @@ void hpmTranslateRotateScale2D(float x, float y, float z, float angle, float sca
     m->_21 = s;
     m->_33 = 1.0;
     m->_44 = 1.0;
-    m->_14 = x;
-    m->_24 = y;
-    m->_34 = z;
+    m->_14 = p->x;
+    m->_24 = p->y;
+    m->_34 = p->z;
 }
 
 void hpmTranspose(const float *mat, float *result){
@@ -518,6 +724,7 @@ void hpmInverse(const float *mat, float *result){
     }
 }
 
+
 //
 // Matrix creation
 //
@@ -557,27 +764,28 @@ void hpmPerspective(int width, int height, float near, float far, float angle,
 }
 
 // Camera
-void hpmLookAt(float eyeX, float eyeY, float eyeZ, float x, float y, float z, float upX, float upY, float upZ, float *mat){
-    float fx, fy, fz, ux, uy, uz, rx, ry, rz;
+void hpmLookAt(float *eye, float *obj, float *up, float *mat){
     HPMmat4 *m = (HPMmat4 *) mat;
+    HPMpoint f, r, u;
     initMat4(m);
-    hpmNormalize(eyeX - x, eyeY - y, eyeZ - z, &fx, &fy, &fz);
-    hpmCross(upX, upY, upZ, fx, fy, fz, &rx, &ry, &rz);
-    hpmNormalize(rx, ry, rz, &rx, &ry, &rz);
-    hpmCross(fx, fy, fz, rx, ry, rz, &ux, &uy, &uz);
+    hpmSubVec(eye, obj, (float *) &f);
+    hpmNormalize((float *) &f);
+    hpmCross(up, (float *) &f, (float *) &r);
+    hpmNormalize((float *) &r);
+    hpmCross((float *) &f, (float *) &r, (float *) &u);
 
-    m->_11 = rx;
-    m->_12 = ry;
-    m->_13 = rz;
-    m->_21 = ux;
-    m->_22 = uy;
-    m->_23 = uz;
-    m->_31 = fx;
-    m->_32 = fy;
-    m->_33 = fz;
-    m->_14 =-hpmDot(rx, ry, rz, eyeX, eyeY, eyeZ);
-    m->_24 =-hpmDot(ux, uy, uz, eyeX, eyeY, eyeZ);
-    m->_34 =-hpmDot(fx, fy, fz, eyeX, eyeY, eyeZ);
+    m->_11 = r.x;
+    m->_12 = r.y;
+    m->_13 = r.z;
+    m->_21 = u.x;
+    m->_22 = u.y;
+    m->_23 = u.z;
+    m->_31 = f.x;
+    m->_32 = f.y;
+    m->_33 = f.z;
+    m->_14 =-hpmDot((float *) &r, eye);
+    m->_24 =-hpmDot((float *) &u, eye);
+    m->_34 =-hpmDot((float *) &f, eye);
     m->_44 = 1.0;
 }
 

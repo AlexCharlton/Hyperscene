@@ -8,11 +8,78 @@ typedef struct {
 	  _14, _24, _34, _44;
 } HPMmat4;
 
-void hpmCopyMat4(const float *source, float *dest);
+typedef struct {
+    float x, y, z, w;
+} HPMquat;
 
+typedef struct {
+    float x, y, z;
+} HPMpoint;
+
+// Angle operations
 float hpmDegreesToRadians(float deg);
 
 float hpmRadiansToDegrees(float rad);
+
+// Vector operations
+void hpmCopyVec(const float *source, float *dest);
+
+void hpmMultVec(const float *pointA, float m, float *result);
+
+void hpmAddVec(const float *pointA, const float *pointB, float *result);
+
+void hpmSubVec(const float *pointA, const float *pointB, float *result);
+
+void hpmCross(const float *pointA, const float *pointB, float *result);
+
+float hpmMagnitude(const float *point);
+
+void hpmNormalize(float *point);
+
+float hpmDot(const float *pointA, const float *pointB);
+
+void hpmLerp(const float *pointA, const float *pointB, float t, float *result);
+
+void hpmMat4VecMult(const float *mat, float *point);
+
+void hpmMat4VecArrayMult(const float *mat, float *vec, size_t length, size_t stride);
+
+
+// Quaternion operations
+void hpmCopyQuat(const float *source, float *dest);
+
+void hpmQuatNormalize(float *quat);
+
+void hpmQuatInverse(const float *quat, float *inv);
+
+void hpmQuatCross(const float *quatA, const float *quatB, float *result);
+
+void hpmQuatVecRotate(const float *quat, float *point);
+
+void hpmAxisAngleQuatRotation(float *axis, float angle, float *quat);
+
+void hpmRotateQuatAxisAngle(float *axis, float angle, float *quat);
+
+void hpmXQuatRotation(float angle, float *quat);
+
+void hpmRotateQuatX(float angle, float *quat);
+
+void hpmYQuatRotation(float angle, float *quat);
+
+void hpmRotateQuatY(float angle, float *quat);
+
+void hpmZQuatRotation(float angle, float *quat);
+
+void hpmRotateQuatZ(float angle, float *quat);
+
+void hpmYPRQuatRotation(float yaw, float pitch, float roll, float *quat);
+
+void hpmRotateQuatYPR(float yaw, float pitch, float roll, float *quat);
+
+void hpmSlerp(const float *quatA, const float *quatB, float t, float *result);
+
+// Matrix operations
+void hpmCopyMat4(const float *source, float *dest);
 
 void hpmMultMat4(const float *matA, const float *matB, float *result);
 
@@ -20,9 +87,9 @@ void hpmPrintMat4(const float *m);
 
 void hpmIdentityMat4(float *m);
 
-void hpmTranslation(float x, float y, float z, float *mat);
+void hpmTranslation(float *vector, float *mat);
 
-void hpmTranslate(float x, float y, float z, float *mat);
+void hpmTranslate(float *vector, float *mat);
 
 void hpmXRotation(float rotation, float *mat);
 
@@ -36,13 +103,13 @@ void hpmZRotation(float rotation, float *mat);
 
 void hpmRotateZ(float rotation, float *mat);
 
-void hpmRotation(float x, float y, float z, float angle, float *mat);
+void hpmAxisAngleRotation(float *axis, float angle, float *mat);
 
-void hpmRotate(float x, float y, float z, float angle, float *mat);
+void hpmRotateAxisAngle(float *axis, float angle, float *mat);
 
-void hpmQuaternionRotation(float x, float y, float z, float w, float *mat);
+void hpmQuaternionRotation(float* quat, float *mat);
 
-void hpmRotateQuaternion(float x, float y, float z, float w, float *mat);
+void hpmRotateQuaternion(float *quat, float *mat);
 
 void hpmYPRRotation(float yaw, float pitch, float roll, float *mat);
 
@@ -66,23 +133,11 @@ void hpmFlipY(float *mat);
 
 void hpmFlipZ(float *mat);
 
-void hpmTranslateRotateScale2D(float x, float y, float z, float angle, float scale,
-                               float *mat);
+void hpmTranslateRotateScale2D(float *point, float angle, float scale, float *mat);
 
 void hpmTranspose(const float *mat, float *result);
 
 void hpmInverse(const float *mat, float *result);
-
-// Vector operations
-void hpmCross(float ax, float ay, float az, float bx, float by, float bz, float *rx, float *ry, float *rz);
-
-void hpmNormalize(float x, float y, float z, float *rx, float *ry, float *rz);
-
-float hpmDot(float ax, float ay, float az, float bx, float by, float bz);
-
-void hpmMat4VecMult(const float *mat, float *vec);
-
-void hpmMat4VecArrayMult(const float *mat, float *vec, size_t length, size_t stride);
 
 // Projection
 void hpmOrtho(int width, int height, float near, float far, float *mat);
@@ -94,7 +149,7 @@ void hpmPerspective(int width, int height, float near, float far, float angle,
 		    float *mat);
 
 // Camera
-void hpmLookAt(float eyeX, float eyeY, float eyeZ, float x, float y, float z, float upX, float upY, float upZ, float *mat);
+void hpmLookAt(float *eye, float *obj, float *up, float *mat);
 
 void hpmCameraInverse(const float *camera, float *inverse);
 
