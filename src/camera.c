@@ -381,8 +381,8 @@ void hpgSetCameraUp(HPGcamera *camera, float *up){
 }
 
 void hpgCameraLookAt(HPGcamera *camera, float *p){
-    if (camera->style != LOOK_AT){
-        fprintf(stderr, "Can't set object to look at on a non LOOK_AT camera\n");
+    if (camera->style == POSITION){
+        fprintf(stderr, "Can't set object to look at on a POSITION camera\n");
         return;
     }
     camera->object.x = p[0];
