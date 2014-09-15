@@ -167,22 +167,22 @@ static int programSort(const void *a, const void *b){
 
 // TODO testing!
 static void setSortFuns(Plane *plane, 
-                        int (*alphaSort)(const void*, const void*),
-                        int (*renderSort)(const void*, const void*)){
+                        int (**alphaSort)(const void*, const void*),
+                        int (**renderSort)(const void*, const void*)){
     float aa, ab, ac;
     aa = abs(plane->a); 
     ab = abs(plane->b); 
     ac = abs(plane->c); 
 
     if ((aa > ab) && (aa > ac)){
-        if (plane->a < 0.0) { alphaSort = xLessThan; renderSort = xNegative; } 
-        else                { alphaSort = xGreaterThan; renderSort = xPositive; }
+        if (plane->a < 0.0) { *alphaSort = &xLessThan; *renderSort = &xNegative; } 
+        else                { *alphaSort = &xGreaterThan; *renderSort = &xPositive; }
     } else if ((ab > ac)){
-        if (plane->b < 0.0) { alphaSort = yLessThan; renderSort = yNegative; } 
-        else                { alphaSort = yGreaterThan; renderSort = yPositive; }
+        if (plane->b < 0.0) { *alphaSort = &yLessThan; *renderSort = &yNegative; } 
+        else                { *alphaSort = &yGreaterThan; *renderSort = &yPositive; }
     } else {
-        if (plane->c < 0.0) { alphaSort = zLessThan; renderSort = zNegative; } 
-        else                { alphaSort = zGreaterThan; renderSort = zPositive; }
+        if (plane->c < 0.0) { *alphaSort = &zLessThan; *renderSort = &zNegative; } 
+        else                { *alphaSort = &zGreaterThan; *renderSort = &zPositive; }
     }
 }
 
@@ -191,19 +191,20 @@ static void renderQueues(HPGcamera *camera){
     struct pipeline *p = NULL;
     int (*alphaSort)(const void*, const void*) = NULL;
     int (*renderSort)(const void*, const void*) = NULL;
-    setSortFuns(&camera->planes[NEAR], alphaSort, renderSort);
+    setSortFuns(&camera->planes[NEAR], &alphaSort, &renderSort);
     qsort(renderQueue.data, alphaQueue.size, sizeof(void *), &programSort);
     qsort(renderQueue.data, renderQueue.size, sizeof(void *), &programSort);
     for (i = 0; i < renderQueue.size;){
-        HPGnode *n = (HPGnode *) hpgVectorValue(&renderQueue, i);
+        HPGnode **start = (HPGnode **) &renderQueue.data[i];
+        HPGnode *n = *start;
         p = n->pipeline;
         p->preRender(n->data);
         for (count = 1; count < (renderQueue.size - i);){
             HPGnode *m = (HPGnode *) hpgVectorValue(&renderQueue, i + count);
-            if (m->pipeline == p)
+            if (m->pipeline == p){
                 count++;
-            else {
-                qsort(n, count, sizeof(void *), renderSort);
+            } else {
+                qsort(start, count, sizeof(void *), renderSort);
                 break;
             }
         }
@@ -214,7 +215,8 @@ static void renderQueues(HPGcamera *camera){
         i += count;
     }
     for (i = 0; i < alphaQueue.size;){
-        HPGnode *n = (HPGnode *) hpgVectorValue(&alphaQueue, i);
+        HPGnode **start = (HPGnode **) &alphaQueue.data[i];
+        HPGnode *n = *start;
         p = n->pipeline;
         p->preRender(n->data);
         for (count = 1; count < (alphaQueue.size - i);){
@@ -222,7 +224,7 @@ static void renderQueues(HPGcamera *camera){
             if (m->pipeline == p)
                 count++;
             else {
-                qsort(n, count, sizeof(void *), alphaSort);
+                qsort(start, count, sizeof(void *), alphaSort);
                 break;
             }
         }
