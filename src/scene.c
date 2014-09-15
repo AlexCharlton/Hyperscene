@@ -99,6 +99,10 @@ static void deleteNode(HPGnode *node, HPGscene *scene){
     hpgDeleteFrom(node->transform, scene->transformPool);
     for (i = 0; i < node->children.size; i++)
         deleteNode(hpgVectorValue(&node->children, i), scene);
+    if ((HPGscene *) node->parent == scene)
+        hpgRemove(&scene->topLevelNodes, node);
+    else
+        hpgRemove(&node->parent->children, node);
     freeNode(node, scene);
 }
 
