@@ -25,7 +25,11 @@ float *hpgCurrentCameraProjection(){
     return currentCamera.projection;
 }
 
-float *hpgCurrentCameraModelView(){
+float *hpgCurrentCameraView(){
+    return currentCamera.view;
+}
+
+float *hpgCurrentCameraViewProjection(){
     return currentCamera.viewProjection;
 }
 
@@ -253,7 +257,7 @@ static void computePlanes(HPGcamera *camera){
 void hpgRenderCamera(HPGcamera *camera){
     currentCamera = *camera; // Set current camera to this one
     HPGcamera *c = &currentCamera;
-    float cameraMat[16], view[16];
+    float cameraMat[16];
     clearQueues();
     if (camera->style == ORBIT){
         float cosTilt = cos(c->rotation.y);
@@ -265,15 +269,16 @@ void hpgRenderCamera(HPGcamera *camera){
         c->position.z = c->object.z + c->rotation.w * cosTilt * cosPan;
         hpmYPRRotation(c->rotation.x, -c->rotation.y, c->rotation.z, cameraMat);
         hpmTranslate((float *) &c->position, cameraMat);
-        hpmCameraInverse(cameraMat, view);
+        hpmCameraInverse(cameraMat, c->view);
     } else if (camera->style == LOOK_AT){
-        hpmLookAt((float *) &c->position, (float *) &c->object, (float *) &c->up, view);
+        hpmLookAt((float *) &c->position, (float *) &c->object, (float *) &c->up, 
+                  c->view);
     } else {
         hpmQuaternionRotation((float *) &c->rotation, cameraMat);
         hpmTranslate((float *) &c->position, cameraMat);
-        hpmCameraInverse(cameraMat, view);
+        hpmCameraInverse(cameraMat, c->view);
     }
-    hpmMultMat4(c->projection, view, c->viewProjection);
+    hpmMultMat4(c->projection, c->view, c->viewProjection);
     computePlanes(c);
     camera->scene->partitionInterface->doVisible(c->scene->partitionStruct,
                                                  c->planes, &addToQueue);

@@ -65,9 +65,11 @@ void hpgDeletePipeline(HPGpipeline *pipeline);
 
 float *hpgCurrentCameraPosition();
 
+float *hpgCurrentCameraView();
+
 float *hpgCurrentCameraProjection();
 
-float *hpgCurrentCameraModelView();
+float *hpgCurrentCameraViewProjection();
 
 float *hpgCurrentCameraModelViewProjection();
 
