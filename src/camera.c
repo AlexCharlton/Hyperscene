@@ -192,44 +192,52 @@ static void renderQueues(HPGcamera *camera){
     int (*alphaSort)(const void*, const void*) = NULL;
     int (*renderSort)(const void*, const void*) = NULL;
     setSortFuns(&camera->planes[NEAR], &alphaSort, &renderSort);
-    qsort(renderQueue.data, alphaQueue.size, sizeof(void *), &programSort);
     qsort(renderQueue.data, renderQueue.size, sizeof(void *), &programSort);
+    HPGnode **nodes = (HPGnode **) &renderQueue.data[0];
     for (i = 0; i < renderQueue.size;){
-        HPGnode **start = (HPGnode **) &renderQueue.data[i];
-        HPGnode *n = *start;
+        HPGnode *n = *nodes;
         p = n->pipeline;
         p->preRender(n->data);
+#ifdef NO_REVERSE_PAINTER
+        renderNode(n, camera);
         for (count = 1; count < (renderQueue.size - i);){
-            HPGnode *m = (HPGnode *) hpgVectorValue(&renderQueue, i + count);
+            HPGnode *m = *(++nodes);
             if (m->pipeline == p){
+                renderNode(m, camera);
+                count++;
+            } else break;
+        }
+#else
+        HPGnode **m = nodes + 1;
+        for (count = 1; count < (renderQueue.size - i);){
+            if ((*m++)->pipeline == p){
                 count++;
             } else {
-                qsort(start, count, sizeof(void *), renderSort);
+                qsort(nodes, count, sizeof(void *), renderSort);
                 break;
             }
         }
         for (j = 0; j < count; j++){
-            renderNode((HPGnode *) hpgVectorValue(&renderQueue, i + j), camera);
+            renderNode(*nodes++, camera);
         }
+#endif
         p->postRender();
         i += count;
     }
+    qsort(alphaQueue.data, alphaQueue.size, sizeof(void *), alphaSort);
+    nodes = (HPGnode **) &alphaQueue.data[0];
     for (i = 0; i < alphaQueue.size;){
-        HPGnode **start = (HPGnode **) &alphaQueue.data[i];
-        HPGnode *n = *start;
+        HPGnode *n = *nodes;
         p = n->pipeline;
         p->preRender(n->data);
+        renderNode(n, camera);
         for (count = 1; count < (alphaQueue.size - i);){
-            HPGnode *m = (HPGnode *) hpgVectorValue(&alphaQueue, i + count);
-            if (m->pipeline == p)
+            HPGnode *m = *(++nodes);
+            if (m->pipeline == p){
+                renderNode(m, camera);
                 count++;
-            else {
-                qsort(start, count, sizeof(void *), alphaSort);
-                break;
-            }
+            } else break;
         }
-        for (j = 0; j < count; j++)
-            renderNode((HPGnode *) hpgVectorValue(&alphaQueue, i + j), camera);
         p->postRender();
         i += count;
     }
