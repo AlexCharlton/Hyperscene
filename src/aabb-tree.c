@@ -1,3 +1,6 @@
+// AABB tree implementation based off of:
+// http://www.cs.nmsu.edu/~joshagam/Solace/papers/master-writeup-print.pdf 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -5,14 +8,12 @@
 #include "partition.h"
 #include "memory.h"
 
-// TODO debug draw
-
 #define SPLIT_X 1
 #define SPLIT_Y 2
 #define SPLIT_Z 4
 
 #define SPLIT_DIR_THRESHOLD 4
-#define SPLIT_THRESHOLD 30
+#define SPLIT_THRESHOLD 30 
 #define TREE_NODES 45
 
 #define ALL_PLANES 63 // bx111111
@@ -55,6 +56,15 @@ static void maybeKillTree(AABBtree *tree);
 static void deleteTree(AABBtree *tree);
 static bool contains(AABBtree *t, BoundingSphere *bs);
 
+#ifdef DEBUG
+void printTree(AABBtree *tree){
+    printf("Tree %p [(%f %f) (%f %f) (%f %f)]", tree,
+           tree->min.x, tree->max.x,
+           tree->min.y, tree->max.y,
+           tree->min.z, tree->max.z);
+}
+#endif 
+
 void *hpgAABBpartitionInterface(){
     PartitionInterface * i = 
         (PartitionInterface *) malloc(sizeof(PartitionInterface));
@@ -77,20 +87,10 @@ static AABBtree *newTree(HPGpool pool, AABBtree *parent){
     tree->parent = parent;
     tree->pool = pool;
     tree->split = 0;
+    tree->lastChecked = 0;
     tree->extentsCorrect = false;
     memset(tree->children, 0, 27 * sizeof(void *));
     return tree;
-}
-
-void treeMap(AABBtree *tree, void (*func)(Node *)){
-    int i;
-    for (i = 0; i < tree->nodes.size; i++)
-	func(hpgVectorValue(&tree->nodes, i));
-    for (i = 0; i < 27; i++){
-	AABBtree *child = tree->children[i];
-	if (child)
-	    treeMap(child, func);
-    }
 }
 
 AABBtree *hpgAABBfindNode(Node *node, AABBtree *tree){
@@ -107,7 +107,10 @@ void hpgAABBaddNode(Node *node, AABBtree *tree){
     AABBtree *t = hpgAABBfindNode(node, tree);
     hpgPush(&t->nodes, node);
     growExtents(t, node->boundingSphere);
-    node->area = (void *) tree;
+    node->area = (void *) t;
+#ifdef DEBUG
+    printf("Added node %p to tree %p\n", node->data, t);
+#endif
 }
 
 void hpgAABBremoveNode(Node *node){
@@ -116,7 +119,26 @@ void hpgAABBremoveNode(Node *node){
 	shrinkExtents(tree, node->boundingSphere);
 	maybeKillTree(tree);
     } else {
-	fprintf(stderr, "Warning, tried to remove node %p from an AABB tree that it did not belong to\n", node);
+	fprintf(stderr, "Warning, tried to remove node %p from an AABB tree that it did not belong to\n", node->data);
+#ifdef DEBUG
+        int i;
+        printTree(tree);
+        printf("\nNodes: ");
+        for (i = 0; i < tree->nodes.size; i++)
+            printf("%p ", (Node *) hpgVectorValue(&tree->nodes, i));
+        printf("\n");
+        AABBtree *topLevel = tree;
+        while (topLevel->parent){
+            topLevel = topLevel->parent;
+        }
+        printf("Maybe child of: ");
+        AABBtree *parent = hpgAABBfindNode(node, topLevel);
+        printTree(parent);
+        printf("\nNodes: ");
+        for (i = 0; i < parent->nodes.size; i++)
+            printf("%p ", (Node *) hpgVectorValue(&parent->nodes, i));
+        printf("\n");
+#endif
     }
 }
 
@@ -128,10 +150,9 @@ void hpgAABBupdateNode(Node *node){
     }
     t = hpgAABBfindNode(node, t);
     if (t != tree){
-	hpgAABBaddNode(node, t);
 	hpgAABBremoveNode(node);
+	hpgAABBaddNode(node, t);
     } else {
-	//TODO check
 	growExtents(t, node->boundingSphere);
 	shrinkExtents(t, node->boundingSphere);
     }
@@ -202,6 +223,11 @@ static void maybeKillTree(AABBtree *tree){
     if (tree->parent && tree->nodes.size == 0){
 	for (i = 0; i < 27; i++)
 	    if (tree->children[i]) return;
+#ifdef DEBUG
+        printf("Killing tree ");
+        printTree(tree);
+        printf("\n");
+#endif
 	removeChild(tree->parent, tree);
 	deleteTree(tree);
     }
@@ -255,7 +281,7 @@ static void setSplitLocation(AABBtree *tree){
 	y += bs->y;
 	z += bs->z;
     }
-    x /= i; y /= y; z /= z;
+    x /= i; y /= i; z /= i;
     Point p = {x, y, z};
     tree->splitPoint = p;
 }
@@ -264,13 +290,13 @@ static void setSplitDirection(AABBtree *tree){
     float x = tree->max.x - tree->min.x;
     float y = tree->max.y - tree->min.y;
     float z = tree->max.z - tree->min.z;
-    unsigned int dir = SPLIT_X & SPLIT_Y & SPLIT_Z;
+    unsigned int dir = SPLIT_X | SPLIT_Y | SPLIT_Z;
     if ((x < y/SPLIT_DIR_THRESHOLD) || (x < z/SPLIT_DIR_THRESHOLD))
-	dir |= SPLIT_X;
+	dir &= ~SPLIT_X;
     if ((y < x/SPLIT_DIR_THRESHOLD) || (y < z/SPLIT_DIR_THRESHOLD))
-	dir |= SPLIT_Y;
+	dir &= ~SPLIT_Y;
     if ((z < x/SPLIT_DIR_THRESHOLD) || (z < y/SPLIT_DIR_THRESHOLD))
-	dir |= SPLIT_Z;
+	dir &= ~SPLIT_Z;
     tree->split = dir;
 }
 
@@ -278,7 +304,6 @@ static void deleteTree(AABBtree *tree){
     hpgDeleteVector(&tree->nodes);
     hpgDeleteFrom(tree, tree->pool);
 }
-
 
 static void updateExtents(AABBtree *tree){
     HPGvector *nodes = &tree->nodes;
@@ -330,6 +355,14 @@ static void splitTree(AABBtree *tree){
 	    hpgInsert(nodes, NULL, i);
 	}
     }
+#ifdef DEBUG
+    printf("Split tree %p at (%f, %f, %f) along: ", tree, tree->splitPoint.x,
+           tree->splitPoint.y, tree->splitPoint.x);
+    if (tree->split & SPLIT_X) printf("x-axis ");
+    if (tree->split & SPLIT_Y) printf("y-axis ");
+    if (tree->split & SPLIT_Z) printf("z-axis ");
+    printf("\n");
+#endif
     for (i = 0; i < nodes->size;){
 	if (!hpgVectorValue(nodes, i)){
 	    hpgRemoveNth(nodes, i);
@@ -352,6 +385,9 @@ static void splitTree(AABBtree *tree){
     }
     return;
 abort:
+#ifdef DEBUG
+    printf("Aborting split of tree %p\n", tree);
+#endif
     for (i = 0; i < 27; i++){
 	AABBtree *child = tree->children[i];
 	if (child){
@@ -365,16 +401,6 @@ abort:
 }
 
 /* Visibility testing */
-
-static void setPNvectors(Plane *plane, Point *p, Point *n, Point *min, Point *max){
-    if (plane->a < 0.0) { p->x = min->x; n->x = max->x; } 
-    else                { p->x = max->x; n->x = min->x; }
-    if (plane->b < 0.0) { p->y = min->y; n->y = max->y; } 
-    else                { p->y = max->y; n->y = min->y; }
-    if (plane->c < 0.0) { p->z = min->z; n->z = max->z; } 
-    else                { p->z = max->z; n->z = min->z; }
-}
-
 /*
   Based on algorithm described in this paper:
     http://jesper.kalliope.org/blog/library/vfcullbox.pdf
@@ -383,6 +409,21 @@ static void setPNvectors(Plane *plane, Point *p, Point *n, Point *min, Point *ma
   Third-party examination of algorithm:
     http://www.cescg.org/CESCG-2002/DSykoraJJelinek/#s6
  */
+
+#ifdef DEBUG
+int nTrees = 0;
+bool modified = false;
+#endif 
+
+static void setPNvectors(Plane *plane, Point *p, Point *n, Point *min, Point *max){
+    if (plane->a < 0.0) { p->x = min->x; n->x = max->x; }
+    else                { p->x = max->x; n->x = min->x; }
+    if (plane->b < 0.0) { p->y = min->y; n->y = max->y; }
+    else                { p->y = max->y; n->y = min->y; }
+    if (plane->c < 0.0) { p->z = min->z; n->z = max->z; }
+    else                { p->z = max->z; n->z = min->z; }
+}
+
 static Intersection inPlanes(AABBtree *t, Plane *planes, int inMask, int *outMask){
     float a, b; int i, k = 1 << t->lastChecked;
     Point p, n;
@@ -391,22 +432,37 @@ static Intersection inPlanes(AABBtree *t, Plane *planes, int inMask, int *outMas
     Point min, max;
     getAABBtreeExtents(t, &min, &max);
     if (k & inMask) {
-	setPNvectors(&plane, &p, &n, &min, &max);
-	a = (plane.a * n.x) + (plane.b * n.y) + (plane.c * n.z);
-	if (a > plane.d) return OUTSIDE;
-	b = (plane.a * p.x) + (plane.b * p.y) + (plane.c * p.z);
-	if (b > plane.d) { *outMask |= k; result = INTERSECT; }
+        setPNvectors(&plane, &p, &n, &min, &max);
+        a = (plane.a * p.x) + (plane.b * p.y) + (plane.c * p.z) + plane.d;
+        if (a < 0) return OUTSIDE;
+        b = (plane.a * n.x) + (plane.b * n.y) + (plane.c * n.z) + plane.d;
+        if (b < 0) { *outMask |= k; result = INTERSECT; }
     }
-    for (i = 0, k = 1; k <= inMask; i++, k += k)
-	if ((i != t->lastChecked) && (k & inMask)){
-	    plane = planes[i];
-	    setPNvectors(&plane, &p, &n, &min, &max);
-	    a = (plane.a * n.x) + (plane.b * n.y) + (plane.c * n.z);
-	    if (a > plane.d) { t->lastChecked = i; return OUTSIDE; }
-	    b = (plane.a * p.x) + (plane.b * p.y) + (plane.c * p.z);
-	    if (b > plane.d) { *outMask |= k; result = INTERSECT; }
-	}
+    for (i = 0, k = 1; k <= inMask; i++, k += k){
+        if ((i != t->lastChecked) && (k & inMask)){
+            plane = planes[i];
+            setPNvectors(&plane, &p, &n, &min, &max);
+            a = (plane.a * p.x) + (plane.b * p.y) + (plane.c * p.z) + plane.d;
+            if (a < 0) { t->lastChecked = i; return OUTSIDE; }
+            b = (plane.a * n.x) + (plane.b * n.y) + (plane.c * n.z) + plane.d;
+            if (b < 0) { *outMask |= k; result = INTERSECT; }
+        }
+    }
     return result;
+}
+
+static void treeMap(AABBtree *tree, void (*func)(Node *)){
+#ifdef DEBUG
+    nTrees++;
+#endif 
+    int i;
+    for (i = 0; i < tree->nodes.size; i++)
+	func(hpgVectorValue(&tree->nodes, i));
+    for (i = 0; i < 27; i++){
+	AABBtree *child = tree->children[i];
+	if (child)
+	    treeMap(child, func);
+    }
 }
 
 static void doVisible(AABBtree *tree, Plane *planes, void (*func)(Node *), int planeMask){
@@ -416,6 +472,9 @@ static void doVisible(AABBtree *tree, Plane *planes, void (*func)(Node *), int p
     if (inView == INSIDE)
 	treeMap(tree, func);
     else if (inView == INTERSECT){
+#ifdef DEBUG
+        nTrees++;
+#endif 
 	for (i = 0; i < tree->nodes.size; i++)
 	    func(hpgVectorValue(&tree->nodes, i));
 	for (i = 0; i < 27; i++){
@@ -427,5 +486,17 @@ static void doVisible(AABBtree *tree, Plane *planes, void (*func)(Node *), int p
 }
 
 void hpgAABBdoVisible(AABBtree *tree, Plane *planes, void (*func)(Node *)){
+#ifdef DEBUG
+    int oldNTrees = nTrees;
+    nTrees = 0;
+#endif 
     doVisible(tree, planes, func, ALL_PLANES);
+#ifdef DEBUG
+    if ((nTrees != oldNTrees)){
+        printf("%d trees were visible\n", nTrees);
+        modified = true;
+    } else {
+        modified = false;
+    }
+#endif 
 }
