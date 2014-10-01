@@ -185,7 +185,21 @@ static void setSortFuns(Plane *plane,
     }
 }
 
+#ifdef DEBUG
+int nonAlphaObjects = 0;
+int alphaObjects = 0;
+#endif 
+
 static void renderQueues(HPGcamera *camera){
+#ifdef DEBUG
+    int nonAlpha = renderQueue.size;
+    int alpha = alphaQueue.size;
+    if ((alpha != alphaObjects) || (nonAlpha != nonAlphaObjects)){
+        printf("Rendering %d non-alpha objects, %d alpha objects\n", nonAlpha, alpha);
+        nonAlphaObjects = nonAlpha;
+        alphaObjects = alpha;
+    }
+#endif 
     int i, j, count;
     struct pipeline *p = NULL;
     int (*alphaSort)(const void*, const void*) = NULL;
