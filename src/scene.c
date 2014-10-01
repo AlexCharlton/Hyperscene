@@ -30,8 +30,6 @@ static void freeNode(HPGnode *node, HPGscene *scene){
 static void updateNode(HPGnode *node, HPGscene *scene){
     int i;
     if (node->needsUpdate){
-        BoundingSphere *bs = node->partitionData.boundingSphere;
-// TODO bounding sphere should be transformed based on parent's transform
         if ((HPGscene *) node->parent == scene){
             hpmQuaternionRotation((float *) &node->rotation, node->transform);
             hpmTranslate((float *) &node->position, node->transform);
@@ -41,6 +39,11 @@ static void updateNode(HPGnode *node, HPGscene *scene){
             hpmTranslate((float *) &node->position, trans);
             hpmMultMat4(trans, node->parent->transform, node->transform);
         }
+        BoundingSphere *bs = node->partitionData.boundingSphere;
+        bs->x = 0;
+        bs->y = 0;
+        bs->z = 0;
+        hpmMat4VecMult(node->transform, (float*) bs);
 	scene->partitionInterface->updateNode(&node->partitionData);
         for (i = 0; i < node->children.size; i++){
             HPGnode *child = hpgVectorValue(&node->children, i);
