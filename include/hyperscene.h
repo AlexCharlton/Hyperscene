@@ -39,6 +39,8 @@ void hpgSetNodePosition(HPGnode *node, float *p);
 
 float* hpgNodeRotation(HPGnode *node);
 
+float* hpgNodePosition(HPGnode *node);
+
 float* hpgNodeData(HPGnode *node);
 
 HPGscene *hpgMakeScene(void *partitionInterface);

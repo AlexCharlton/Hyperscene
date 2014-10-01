@@ -136,6 +136,10 @@ float* hpgNodeRotation(HPGnode *node){
     return (float *) &node->rotation;
 }
 
+float* hpgNodePosition(HPGnode *node){
+    return (float *) &node->position;
+}
+
 float* hpgNodeData(HPGnode *node){
     return node->data;
 }
