@@ -65,16 +65,16 @@ void printTree(AABBtree *tree){
 }
 #endif 
 
+PartitionInterface partitionInterface = {sizeof(AABBtree),
+                                         (void *(*)(HPGpool)) hpgAABBnewTree,
+                                         (void (*)(Node *, void *)) hpgAABBaddNode,
+                                         (void (*)(Node *)) hpgAABBremoveNode,
+                                         (void (*)(Node *)) hpgAABBupdateNode,
+                                         (void (*)(void *, Plane *, void (*)(Node *))) 
+                                           hpgAABBdoVisible};
+
 void *hpgAABBpartitionInterface(){
-    PartitionInterface * i = 
-        (PartitionInterface *) malloc(sizeof(PartitionInterface));
-    i->structSize = sizeof(AABBtree);
-    i->new = (void *(*)(HPGpool)) &hpgAABBnewTree;
-    i->addNode = (void (*)(Node *, void *)) &hpgAABBaddNode;
-    i->removeNode = (void (*)(Node *)) &hpgAABBremoveNode;
-    i->updateNode = (void (*)(Node *)) &hpgAABBupdateNode;
-    i->doVisible = (void (*)(void *, Plane *, void (*)(Node *))) &hpgAABBdoVisible;
-    return (void *) i;
+    return (void *) &partitionInterface;
 }
 
 AABBtree *hpgAABBnewTree(HPGpool *pool){
