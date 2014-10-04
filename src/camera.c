@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <math.h>
 #include <float.h>
 #include "scene.h"
@@ -36,20 +37,30 @@ float *hpgCurrentCameraModelViewProjection(){
     return currentCamera.modelViewProjection;
 }
 
+float hpgCurrentInverseTransposeModel[16];
+
 void hpgSetWindowSizeFun(HPGwindowSizeFun fun){ windowSizefun = fun; }
 
 static void addToQueue(Node *node){
     HPGnode *n = (HPGnode *) node->data;
-    if(!n->pipeline) return;
-    if (n->pipeline->hasAlpha)
+    if (!n->pipeline) return;
+    if (n->pipeline->hasAlpha == 1){
 	hpgPush(&alphaQueue, n);
-    else
+    } else if (n->pipeline->hasAlpha == 0) {
 	hpgPush(&renderQueue, n);
+    } else {
+        hpgVisibleNodeExtensions(currentCamera.scene, node->data);
+    }
 }
 
 static void renderNode(HPGnode *node, HPGcamera *camera){
+    float inverse[16];
     hpmMultMat4(camera->viewProjection, node->transform, 
                 camera->modelViewProjection);
+#ifndef NO_INVERSE_TRANSPOSE
+    hpmCameraInverse(node->transform, inverse);
+    hpmTranspose(inverse, hpgCurrentInverseTransposeModel);
+#endif
     node->pipeline->render(node->data);
 }
 
@@ -157,8 +168,8 @@ static int zLessThan(const void *a, const void *b){
 }
 
 static int programSort(const void *a, const void *b){
-    unsigned int pa = (int) (((HPGnode *) a)->pipeline);
-    unsigned int pb = (int) (((HPGnode *) b)->pipeline);
+    HPGpipeline *pa = ((HPGnode *) a)->pipeline;
+    HPGpipeline *pb = ((HPGnode *) b)->pipeline;
     if (pa < pb) return -1;
     else if (pa > pb) return 1;
     return 0;
@@ -319,7 +330,9 @@ void hpgRenderCamera(HPGcamera *camera){
     computePlanes(c);
     camera->scene->partitionInterface->doVisible(c->scene->partitionStruct,
                                                  c->planes, &addToQueue);
+    hpgPreRenderExtensions(c->scene);
     renderQueues(c);
+    hpgPostRenderExtensions(c->scene);
     *camera = currentCamera; // Copy currentCamera back into camera
 }
 
@@ -402,6 +415,10 @@ void hpgSetCameraPosition(HPGcamera *camera, float *vec){
     camera->position.x = vec[0];
     camera->position.y = vec[1];
     camera->position.z = vec[2];
+}
+
+float *hpgCameraPosition(HPGcamera *camera){
+    return (float *) &camera->position;
 }
 
 float *hpgCameraRotation(HPGcamera *camera){

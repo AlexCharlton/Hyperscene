@@ -73,9 +73,7 @@ PartitionInterface partitionInterface = {sizeof(AABBtree),
                                          (void (*)(void *, Plane *, void (*)(Node *))) 
                                            hpgAABBdoVisible};
 
-void *hpgAABBpartitionInterface(){
-    return (void *) &partitionInterface;
-}
+void *hpgAABBpartitionInterface = (void *) &partitionInterface;
 
 AABBtree *hpgAABBnewTree(HPGpool *pool){
     return newTree(pool, NULL);

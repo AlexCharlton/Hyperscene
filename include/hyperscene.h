@@ -20,6 +20,15 @@ typedef struct pipeline HPGpipeline;
 typedef void (*HPGwindowSizeFun)(int *, int *);
 typedef void (*HPGcameraUpdateFun)(int, int, HPGcamera*);
 
+typedef struct HPGextension {
+    void (*init)(void **);
+    void (*preRender)(void *);
+    void (*postRender)(void *);
+    void (*visibleNode)(void *, HPGnode *node);
+    void (*update)(void *);
+    void (*delete)(void *);
+} HPGextension;
+
 extern unsigned int hpgNodePoolSize, hpgBoundingSpherePoolSize, hpgTransformPoolSize,
     hpgPartitionPoolSize;
 
@@ -31,7 +40,9 @@ HPGnode *hpgAddNode(HPGnode *parent, void *data,
 
 void hpgDeleteNode(HPGnode *node);
 
-void hpgSetBoundingSphere(HPGnode *node, float radius);
+void hpgSetNodeBoundingSphere(HPGnode *node, float radius);
+
+float *hpgNodeBoundingSphere(HPGnode *node);
 
 void hpgMoveNode(HPGnode *node, float *vec);
 
@@ -40,6 +51,8 @@ void hpgSetNodePosition(HPGnode *node, float *p);
 float* hpgNodeRotation(HPGnode *node);
 
 float* hpgNodePosition(HPGnode *node);
+
+float* hpgNodeTransform(HPGnode *node);
 
 float* hpgNodeData(HPGnode *node);
 
@@ -65,6 +78,8 @@ void hpgDeletePipeline(HPGpipeline *pipeline);
 
 /* Cameras */
 
+extern float hpgCurrentInverseTransposeModel[16];
+
 float *hpgCurrentCameraPosition();
 
 float *hpgCurrentCameraView();
@@ -88,6 +103,8 @@ void hpgDeleteCamera(HPGcamera *camera);
 void hpgMoveCamera(HPGcamera *camera, float *vec);
 
 void hpgSetCameraPosition(HPGcamera *camera, float *vec);
+
+float *hpgCameraPosition(HPGcamera *camera);
 
 float *hpgCameraRotation(HPGcamera *camera);
 
@@ -126,4 +143,10 @@ void hpgActiveateCamera(HPGcamera *c);
 void hpgDeactiveateCamera(HPGcamera *c);
 
 /* Spatial partitioning interfaces */
-void *hpgAABBpartitionInterface();
+extern void *hpgAABBpartitionInterface;
+
+/* Extensions */
+void hpgActivateExtension(HPGscene *scene, HPGextension *extension);
+
+void *hpgExtensionData(HPGscene *scene, HPGextension *extension);
+

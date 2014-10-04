@@ -113,9 +113,13 @@ void hpgDeleteNode(HPGnode *node){
     deleteNode(node, getScene(node));
 }
 
-void hpgSetBoundingSphere(HPGnode *node, float radius){
+void hpgSetNodeBoundingSphere(HPGnode *node, float radius){
     node->partitionData.boundingSphere->r = radius;
     node->needsUpdate = true;
+}
+
+float *hpgNodeBoundingSphere(HPGnode *node){
+    return (float *) node->partitionData.boundingSphere;
 }
 
 void hpgMoveNode(HPGnode *node, float *vec){
@@ -140,6 +144,10 @@ float* hpgNodePosition(HPGnode *node){
     return (float *) &node->position;
 }
 
+float* hpgNodeTransform(HPGnode *node){
+    return node->transform;
+}
+
 float* hpgNodeData(HPGnode *node){
     return node->data;
 }
@@ -161,6 +169,7 @@ HPGscene *hpgMakeScene(void *partitionInterface){
     scene->partitionStruct = scene->partitionInterface->new(scene->partitionPool);
     scene->null = NULL;
     hpgInitVector(&scene->topLevelNodes, 1024);
+    hpgInitVector(&scene->extensions, 4);
     hpgPush(&activeScenes, (void *) scene);
     return scene;
 }
@@ -169,6 +178,7 @@ void hpgDeleteScene(HPGscene *scene){
     int i;
     for (i = 0; i < scene->topLevelNodes.size; i++)
         freeNode(hpgVectorValue(&scene->topLevelNodes, i), scene);
+    hpgDeleteExtensions(scene);
     hpgClearPool(scene->nodePool);
     hpgClearPool(scene->transformPool);
     hpgClearPool(scene->boundingSpherePool);
@@ -189,6 +199,7 @@ static void hpgUpdateScene(HPGscene *scene){
     int i;
     for (i = 0; i < scene->topLevelNodes.size; i++)
         updateNode(hpgVectorValue(&scene->topLevelNodes, i), scene);
+    hpgUpdateExtensions(scene);
 }
 
 void hpgUpdateScenes(){
@@ -218,4 +229,62 @@ void hpgPipelineAlpha(HPGpipeline *pipeline, bool hasAlpha){
 
 void hpgDeletePipeline(HPGpipeline *pipeline){
     hpgDeleteFrom(pipeline, pipelinePool);
+}
+
+/* Extensions */
+// Add a node with the extension as the pipeline to have it passed to visibleNode when rendering
+
+void hpgActivateExtension(HPGscene *scene, HPGextension *extension){
+    hpgPush(&scene->extensions, (void *) extension);
+    hpgPush(&scene->extensions, NULL);
+    extension->init(&scene->extensions.data[scene->extensions.size-1]);
+}
+
+void *hpgExtensionData(HPGscene *scene, HPGextension *extension){
+    int i;
+    for (i = 0; i < scene->extensions.size; i += 2){
+        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        if (e == extension) return scene->extensions.data[i+1];
+    }
+}
+
+void hpgPreRenderExtensions(HPGscene *scene){
+    int i;
+    for (i = 0; i < scene->extensions.size; i += 2){
+        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        e->preRender(scene->extensions.data[i+1]);
+    }
+}
+
+void hpgPostRenderExtensions(HPGscene *scene){
+    int i;
+    for (i = 0; i < scene->extensions.size; i += 2){
+        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        e->postRender(scene->extensions.data[i+1]);
+    }
+}
+
+void hpgVisibleNodeExtensions(HPGscene *scene, HPGnode *node){
+    int i;
+    for (i = 0; i < scene->extensions.size; i += 2){
+        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        if ((void*) node->pipeline == (void*) e)
+            e->visibleNode(scene->extensions.data[i+1], node);
+    }
+}
+
+void hpgUpdateExtensions(HPGscene *scene){
+    int i;
+    for (i = 0; i < scene->extensions.size; i += 2){
+        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        e->update(scene->extensions.data[i+1]);
+    }
+}
+
+void hpgDeleteExtensions(HPGscene *scene){
+    int i;
+    for (i = 0; i < scene->extensions.size; i += 2){
+        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        e->delete(scene->extensions.data[i+1]);
+    }
 }

@@ -4,7 +4,7 @@
 #include "partition.h"
 
 struct pipeline {
-    bool hasAlpha;
+    long hasAlpha; // A boolean value expressed as a long so that pipeline can't be mixed up with an extension
     void (*preRender)(void *);
     void (*render)(void *);
     void (*postRender)();
@@ -30,6 +30,7 @@ struct scene {
     PartitionInterface *partitionInterface;
     void *partitionStruct;
     HPGpool nodePool, boundingSpherePool, transformPool, partitionPool;
+    HPGvector extensions;
 };
 
 struct camera {
@@ -48,3 +49,10 @@ struct camera {
 
 void hpgInitCameras();
 void hpgSetWindowSizeFun(HPGwindowSizeFun fun);
+
+/* Extensions */
+void hpgPreRenderExtensions(HPGscene *scene);
+void hpgPostRenderExtensions(HPGscene *scene);
+void hpgVisibleNodeExtensions(HPGscene *scene, HPGnode *node);
+void hpgUpdateExtensions(HPGscene *scene);
+void hpgDeleteExtensions(HPGscene *scene);
