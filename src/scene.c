@@ -18,7 +18,7 @@ void hpgInitScenes(HPGwindowSizeFun windowSizeFun){
 /* Nodes */
 static void freeNode(HPGnode *node, HPGscene *scene){
     int i;
-    node->delete(node->data);
+    if (node->delete) node->delete(node->data);
     if (node->children.capacity){
 	HPGvector *v = &node->children;
 	for (i = 0; i < node->children.size; i++)
@@ -84,7 +84,7 @@ HPGnode *hpgAddNode(HPGnode *parent, void *data,
     node->data = data;
     node->pipeline = pipeline;
     node->parent = parent;
-    node->delete = (deleteFunc) ? deleteFunc : &free;;
+    node->delete = deleteFunc;
     node->needsUpdate = true;
     hpgInitVector(&node->children, 0);
     scene->partitionInterface->addNode(&node->partitionData, scene->partitionStruct);
