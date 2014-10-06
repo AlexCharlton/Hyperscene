@@ -29,8 +29,9 @@ HPGvector *hpgNewVector(size_t initialCapacity){
 }
 
 void hpgDeleteVector(HPGvector *vector){
-    if (!vector->isStatic)
+    if (!vector->isStatic){
 	free(vector->data);
+    }
     //free(vector); // TODO: Should this be here, if so, there needs to be some other deletion routine.
 }
 
@@ -90,8 +91,8 @@ bool hpgRemove(HPGvector *vector, void *el){
 bool hpgRemoveNth(HPGvector *vector, size_t index){
     if (vector->size == 0 || index >= vector->size) return false;
     if (index <= (vector->size - 1))
-	memcpy(&vector->data[index], &vector->data[index + 1],
-	       sizeof(void*) * (vector->size - index - 1));
+	memmove(&vector->data[index], &vector->data[index + 1],
+                sizeof(void*) * (vector->size - index - 1));
     --vector->size;
     return true;
 }
