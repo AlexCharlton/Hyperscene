@@ -519,7 +519,7 @@ void hpgSetCameraRoll(HPGcamera *camera, float angle){
 void hpgResizeCameras(int width, int height){
     int i;
     for (i = 0; i < cameraList.size; i++){
-	HPGcamera *camera = (HPGcamera *) hpgVectorValue(&cameraList, i);
+	HPGcamera *camera = (HPGcamera *) cameraList.data[i];
 	camera->update(width, height, camera);
     }
 }
@@ -560,7 +560,7 @@ void hpgStrafeCamera(HPGcamera *camera, float dist){
 void hpgRenderCameras(){
     int i;
     for (i = 0; i < activeCameras.size; i++)
-	hpgRenderCamera((HPGcamera *) hpgVectorValue(&activeCameras, i));
+	hpgRenderCamera((HPGcamera *) activeCameras.data[i]);
 }
 
 void hpgActiveateCamera(HPGcamera *c){

@@ -21,8 +21,8 @@ static void freeNode(HPGnode *node, HPGscene *scene){
     if (node->delete) node->delete(node->data);
     if (node->children.capacity){
 	HPGvector *v = &node->children;
-	for (i = 0; i < node->children.size; i++)
-	    freeNode(hpgVectorValue(v, i), scene);
+	for (i = 0; i < v->size; i++)
+	    freeNode(v->data[i], scene);
 	hpgDeleteVector(v);
     }
 }
@@ -46,14 +46,14 @@ static void updateNode(HPGnode *node, HPGscene *scene){
         hpmMat4VecMult(node->transform, (float*) bs);
 	scene->partitionInterface->updateNode(&node->partitionData);
         for (i = 0; i < node->children.size; i++){
-            HPGnode *child = hpgVectorValue(&node->children, i);
+            HPGnode *child = node->children.data[i];
             child->needsUpdate = true;
             updateNode(child, scene);
         }
         node->needsUpdate = false;
     } else {
         for (i = 0; i < node->children.size; i++)
-            updateNode(hpgVectorValue(&node->children, i), scene);
+            updateNode(node->children.data[i], scene);
     }
 }
 
@@ -101,7 +101,7 @@ static void deleteNode(HPGnode *node, HPGscene *scene){
     hpgDeleteFrom(node->partitionData.boundingSphere, scene->boundingSpherePool);
     hpgDeleteFrom(node->transform, scene->transformPool);
     for (i = 0; i < node->children.size; i++)
-        deleteNode(hpgVectorValue(&node->children, i), scene);
+        deleteNode(node->children.data[i], scene);
     if ((HPGscene *) node->parent == scene)
         hpgRemove(&scene->topLevelNodes, node);
     else
@@ -177,7 +177,7 @@ HPGscene *hpgMakeScene(void *partitionInterface){
 void hpgDeleteScene(HPGscene *scene){
     int i;
     for (i = 0; i < scene->topLevelNodes.size; i++)
-        freeNode(hpgVectorValue(&scene->topLevelNodes, i), scene);
+        freeNode(scene->topLevelNodes.data[i], scene);
     hpgDeleteExtensions(scene);
     hpgClearPool(scene->nodePool);
     hpgClearPool(scene->transformPool);
@@ -198,14 +198,14 @@ void hpgDeactiveateScene(HPGscene *s){
 static void hpgUpdateScene(HPGscene *scene){
     int i;
     for (i = 0; i < scene->topLevelNodes.size; i++)
-        updateNode(hpgVectorValue(&scene->topLevelNodes, i), scene);
+        updateNode(scene->topLevelNodes.data[i], scene);
     hpgUpdateExtensions(scene);
 }
 
 void hpgUpdateScenes(){
     int i;
     for (i = 0; i < activeScenes.size; i++)
-	hpgUpdateScene((HPGscene *) hpgVectorValue(&activeScenes, i));
+	hpgUpdateScene((HPGscene *) activeScenes.data[i]);
 }
 
 

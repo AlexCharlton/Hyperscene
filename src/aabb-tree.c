@@ -101,14 +101,18 @@ AABBtree *hpgAABBfindNode(Node *node, AABBtree *tree){
     return t;
 }
 
+void addNode(Node *node, AABBtree *tree){
+    hpgPush(&tree->nodes, node);
+    node->area = (void *) tree;
+#ifdef DEBUG
+    printf("Added node %p to tree %p\n", node->data, tree);
+#endif
+}
+
 void hpgAABBaddNode(Node *node, AABBtree *tree){
     AABBtree *t = hpgAABBfindNode(node, tree);
-    hpgPush(&t->nodes, node);
-    growExtents(t, node->boundingSphere);
-    node->area = (void *) t;
-#ifdef DEBUG
-    printf("Added node %p to tree %p\n", node->data, t);
-#endif
+    addNode(node, t);
+    growExtents(tree, node->boundingSphere);
 }
 
 void hpgAABBremoveNode(Node *node){
@@ -123,7 +127,7 @@ void hpgAABBremoveNode(Node *node){
         printTree(tree);
         printf("\nNodes: ");
         for (i = 0; i < tree->nodes.size; i++)
-            printf("%p ", (Node *) hpgVectorValue(&tree->nodes, i));
+            printf("%p ", ((Node *) tree->nodes.data[i])->data);
         printf("\n");
         AABBtree *topLevel = tree;
         while (topLevel->parent){
@@ -134,8 +138,9 @@ void hpgAABBremoveNode(Node *node){
         printTree(parent);
         printf("\nNodes: ");
         for (i = 0; i < parent->nodes.size; i++)
-            printf("%p ", (Node *) hpgVectorValue(&parent->nodes, i));
+            printf("%p ", ((Node *) tree->nodes.data[i])->data);
         printf("\n");
+        exit(EXIT_FAILURE);
 #endif
     }
 }
@@ -149,7 +154,8 @@ void hpgAABBupdateNode(Node *node){
     t = hpgAABBfindNode(node, t);
     if (t != tree){
 	hpgAABBremoveNode(node);
-	hpgAABBaddNode(node, t);
+	addNode(node, t);
+        growExtents(tree, node->boundingSphere);
     } else {
 	growExtents(t, node->boundingSphere);
 	shrinkExtents(t, node->boundingSphere);
@@ -159,7 +165,7 @@ void hpgAABBupdateNode(Node *node){
 static void getAABBtreeExtents(AABBtree *tree, Point *min, Point *max){
     if (!tree->extentsCorrect)
 	updateExtents(tree);
-    if (!tree->split && hpgLength(&tree->nodes) >= SPLIT_THRESHOLD)
+    if (!tree->split && (tree->nodes.size >= SPLIT_THRESHOLD))
 	splitTree(tree);
     *min = tree->min;
     *max = tree->max;
@@ -274,7 +280,7 @@ static void setSplitLocation(AABBtree *tree){
     int i;
     for (i = 0; i < tree->nodes.size; i++){
 	BoundingSphere *bs =
-	    ((Node *) hpgVectorValue(&tree->nodes, i))->boundingSphere;
+	    ((Node *) tree->nodes.data[i])->boundingSphere;
 	x += bs->x;
 	y += bs->y;
 	z += bs->z;
@@ -305,12 +311,12 @@ static void deleteTree(AABBtree *tree){
 
 static void updateExtents(AABBtree *tree){
     HPGvector *nodes = &tree->nodes;
-    int nCurrentNodes = hpgLength(nodes);
+    int nCurrentNodes = nodes->size;
     Point max = {-INFINITY, -INFINITY, -INFINITY};
     Point min = {INFINITY, INFINITY, INFINITY};
     int i;
     for (i = 0; i < nCurrentNodes; i++){
-	Node *node = hpgVectorValue(nodes, i);
+	Node *node = nodes->data[i];
 	BoundingSphere *bs = node->boundingSphere;
 	max.x = fmax(max.x, bs->x + bs->r);
 	max.y = fmax(max.y, bs->y + bs->r);
@@ -340,17 +346,16 @@ static void updateExtents(AABBtree *tree){
 
 static void splitTree(AABBtree *tree){
     HPGvector *nodes = &tree->nodes;
-    int nCurrentNodes = hpgLength(nodes);
+    int nCurrentNodes = nodes->size;
     int i;
     setSplitLocation(tree);
     setSplitDirection(tree);
     for (i = 0; i < nCurrentNodes; i++){
-	Node *node = hpgVectorValue(nodes, i);
+	Node *node = nodes->data[i];
 	AABBtree *branch = whichBranch(tree, node->boundingSphere);
 	if (branch !=tree){
-	    hpgPush(&branch->nodes, node);
-	    node->area = (void *) branch;
-	    hpgInsert(nodes, NULL, i);
+            addNode(node, branch);
+            nodes->data[i] = NULL;
 	}
     }
 #ifdef DEBUG
@@ -362,7 +367,7 @@ static void splitTree(AABBtree *tree){
     printf("\n");
 #endif
     for (i = 0; i < nodes->size;){
-	if (!hpgVectorValue(nodes, i)){
+	if (!nodes->data[i]){
 	    hpgRemoveNth(nodes, i);
 	} else {
 	    i++;
@@ -371,7 +376,7 @@ static void splitTree(AABBtree *tree){
     for (i = 0; i < 27; i++){
 	AABBtree *child = tree->children[i];
 	if (child){
-	    if (hpgLength(&child->nodes) == nCurrentNodes)
+	    if (child->nodes.size == nCurrentNodes)
 		goto abort;
 	}
     }
@@ -391,8 +396,7 @@ abort:
 	if (child){
 	    Node *n;
 	    while ((n = hpgPop(&child->nodes))){
-		hpgPush(nodes, n);
-		n->area = (void *) tree;
+                addNode(n, tree);
 	    }
 	}
     }
@@ -455,7 +459,7 @@ static void treeMap(AABBtree *tree, void (*func)(Node *)){
 #endif 
     int i;
     for (i = 0; i < tree->nodes.size; i++)
-	func(hpgVectorValue(&tree->nodes, i));
+	func(tree->nodes.data[i]);
     for (i = 0; i < 27; i++){
 	AABBtree *child = tree->children[i];
 	if (child)
@@ -474,7 +478,7 @@ static void doVisible(AABBtree *tree, Plane *planes, void (*func)(Node *), int p
         nTrees++;
 #endif 
 	for (i = 0; i < tree->nodes.size; i++)
-	    func(hpgVectorValue(&tree->nodes, i));
+	    func(tree->nodes.data[i]);
 	for (i = 0; i < 27; i++){
 	    AABBtree *child = tree->children[i];
 	    if (child)
