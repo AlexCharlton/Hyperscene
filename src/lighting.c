@@ -58,6 +58,7 @@ void hpgDeleteLighting(void *data){
 // TODO: Cache lights?
 void hpgLightingPreRender(void *data){
     currentLights = lightQueue.size;
+    currentLights = (currentLights > hpgMaxLights) ? hpgMaxLights : currentLights;
     int i;
     for (i = 0; i < currentLights; i++){
         HPGnode *node = (HPGnode *) lightQueue.data[i];
