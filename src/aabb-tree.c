@@ -29,24 +29,24 @@ typedef struct {
 typedef struct aabbTree {
     struct aabbTree *parent;
     struct aabbTree *children[27];
-    HPGpool pool;
+    HPSpool pool;
     unsigned short split, lastChecked;
     Point splitPoint;
     Point min;
     Point max;
     bool extentsCorrect;
-    HPGvector nodes;
+    HPSvector nodes;
     Node *nodesData[TREE_NODES];
 } AABBtree;
 
-AABBtree *hpgAABBnewTree(HPGpool *pool);
-AABBtree *hpgAABBfindNode(Node *node, AABBtree *tree);
-void hpgAABBaddNode(Node *node, AABBtree *tree);
-void hpgAABBremoveNode(Node *node);
-void hpgAABBupdateNode(Node *node);
-void hpgAABBdoVisible(AABBtree *tree, Plane *planes, void (*func)(Node *));
+AABBtree *hpsAABBnewTree(HPSpool *pool);
+AABBtree *hpsAABBfindNode(Node *node, AABBtree *tree);
+void hpsAABBaddNode(Node *node, AABBtree *tree);
+void hpsAABBremoveNode(Node *node);
+void hpsAABBupdateNode(Node *node);
+void hpsAABBdoVisible(AABBtree *tree, Plane *planes, void (*func)(Node *));
 static void getAABBtreeExtents(AABBtree *tree, Point *min, Point *max);
-static AABBtree *newTree(HPGpool pool, AABBtree *parent);
+static AABBtree *newTree(HPSpool pool, AABBtree *parent);
 static void splitTree(AABBtree *tree);
 static void updateExtents(AABBtree *tree);
 static AABBtree *whichBranch(AABBtree *tree, BoundingSphere *bs);
@@ -66,22 +66,22 @@ void printTree(AABBtree *tree){
 #endif 
 
 PartitionInterface partitionInterface = {sizeof(AABBtree),
-                                         (void *(*)(HPGpool)) hpgAABBnewTree,
-                                         (void (*)(Node *, void *)) hpgAABBaddNode,
-                                         (void (*)(Node *)) hpgAABBremoveNode,
-                                         (void (*)(Node *)) hpgAABBupdateNode,
+                                         (void *(*)(HPSpool)) hpsAABBnewTree,
+                                         (void (*)(Node *, void *)) hpsAABBaddNode,
+                                         (void (*)(Node *)) hpsAABBremoveNode,
+                                         (void (*)(Node *)) hpsAABBupdateNode,
                                          (void (*)(void *, Plane *, void (*)(Node *))) 
-                                           hpgAABBdoVisible};
+                                           hpsAABBdoVisible};
 
-void *hpgAABBpartitionInterface = (void *) &partitionInterface;
+void *hpsAABBpartitionInterface = (void *) &partitionInterface;
 
-AABBtree *hpgAABBnewTree(HPGpool *pool){
+AABBtree *hpsAABBnewTree(HPSpool *pool){
     return newTree(pool, NULL);
 }
 
-static AABBtree *newTree(HPGpool pool, AABBtree *parent){
-    AABBtree *tree = hpgAllocateFrom(pool);
-    hpgInitStaticVector(&tree->nodes, tree->nodesData, TREE_NODES);
+static AABBtree *newTree(HPSpool pool, AABBtree *parent){
+    AABBtree *tree = hpsAllocateFrom(pool);
+    hpsInitStaticVector(&tree->nodes, tree->nodesData, TREE_NODES);
     tree->parent = parent;
     tree->pool = pool;
     tree->split = 0;
@@ -91,7 +91,7 @@ static AABBtree *newTree(HPGpool pool, AABBtree *parent){
     return tree;
 }
 
-AABBtree *hpgAABBfindNode(Node *node, AABBtree *tree){
+AABBtree *hpsAABBfindNode(Node *node, AABBtree *tree){
     AABBtree *t = tree;
     AABBtree *u = NULL;
     while (u != t){
@@ -102,22 +102,22 @@ AABBtree *hpgAABBfindNode(Node *node, AABBtree *tree){
 }
 
 void addNode(Node *node, AABBtree *tree){
-    hpgPush(&tree->nodes, node);
+    hpsPush(&tree->nodes, node);
     node->area = (void *) tree;
 #ifdef DEBUG
     printf("Added node %p to tree %p\n", node->data, tree);
 #endif
 }
 
-void hpgAABBaddNode(Node *node, AABBtree *tree){
-    AABBtree *t = hpgAABBfindNode(node, tree);
+void hpsAABBaddNode(Node *node, AABBtree *tree){
+    AABBtree *t = hpsAABBfindNode(node, tree);
     addNode(node, t);
     growExtents(tree, node->boundingSphere);
 }
 
-void hpgAABBremoveNode(Node *node){
+void hpsAABBremoveNode(Node *node){
     AABBtree *tree = (AABBtree *) node->area;
-    if (hpgRemove(&tree->nodes, (void *) node)){
+    if (hpsRemove(&tree->nodes, (void *) node)){
 	shrinkExtents(tree, node->boundingSphere);
 	maybeKillTree(tree);
     } else {
@@ -134,7 +134,7 @@ void hpgAABBremoveNode(Node *node){
             topLevel = topLevel->parent;
         }
         printf("Maybe child of: ");
-        AABBtree *parent = hpgAABBfindNode(node, topLevel);
+        AABBtree *parent = hpsAABBfindNode(node, topLevel);
         printTree(parent);
         printf("\nNodes: ");
         for (i = 0; i < parent->nodes.size; i++)
@@ -145,15 +145,15 @@ void hpgAABBremoveNode(Node *node){
     }
 }
 
-void hpgAABBupdateNode(Node *node){
+void hpsAABBupdateNode(Node *node){
     AABBtree *tree = (AABBtree *) node->area;
     AABBtree *t = tree;
     while (t->parent && !contains(t, node->boundingSphere)){
 	t = t->parent;
     }
-    t = hpgAABBfindNode(node, t);
+    t = hpsAABBfindNode(node, t);
     if (t != tree){
-	hpgAABBremoveNode(node);
+	hpsAABBremoveNode(node);
 	addNode(node, t);
         growExtents(tree, node->boundingSphere);
     } else {
@@ -305,12 +305,12 @@ static void setSplitDirection(AABBtree *tree){
 }
 
 static void deleteTree(AABBtree *tree){
-    hpgDeleteVector(&tree->nodes);
-    hpgDeleteFrom(tree, tree->pool);
+    hpsDeleteVector(&tree->nodes);
+    hpsDeleteFrom(tree, tree->pool);
 }
 
 static void updateExtents(AABBtree *tree){
-    HPGvector *nodes = &tree->nodes;
+    HPSvector *nodes = &tree->nodes;
     int nCurrentNodes = nodes->size;
     Point max = {-INFINITY, -INFINITY, -INFINITY};
     Point min = {INFINITY, INFINITY, INFINITY};
@@ -345,7 +345,7 @@ static void updateExtents(AABBtree *tree){
 }
 
 static void splitTree(AABBtree *tree){
-    HPGvector *nodes = &tree->nodes;
+    HPSvector *nodes = &tree->nodes;
     int nCurrentNodes = nodes->size;
     int i;
     setSplitLocation(tree);
@@ -368,7 +368,7 @@ static void splitTree(AABBtree *tree){
 #endif
     for (i = 0; i < nodes->size;){
 	if (!nodes->data[i]){
-	    hpgRemoveNth(nodes, i);
+	    hpsRemoveNth(nodes, i);
 	} else {
 	    i++;
 	}
@@ -395,7 +395,7 @@ abort:
 	AABBtree *child = tree->children[i];
 	if (child){
 	    Node *n;
-	    while ((n = hpgPop(&child->nodes))){
+	    while ((n = hpsPop(&child->nodes))){
                 addNode(n, tree);
 	    }
 	}
@@ -487,7 +487,7 @@ static void doVisible(AABBtree *tree, Plane *planes, void (*func)(Node *), int p
     }
 }
 
-void hpgAABBdoVisible(AABBtree *tree, Plane *planes, void (*func)(Node *)){
+void hpsAABBdoVisible(AABBtree *tree, Plane *planes, void (*func)(Node *)){
 #ifdef DEBUG
     int oldNTrees = nTrees;
     nTrees = 0;

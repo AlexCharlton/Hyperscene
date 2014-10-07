@@ -3,7 +3,7 @@
 #include <string.h>
 #include "memory.h"
 
-HPGpool hpgMakePool(size_t blockSize, size_t nBlocks, char name[32]){
+HPSpool hpsMakePool(size_t blockSize, size_t nBlocks, char name[32]){
     int i;
     size_t size = (blockSize < sizeof(void *)) ? sizeof(void *) : blockSize;
     char *pool = (char *) malloc(size * nBlocks + sizeof(struct pool));
@@ -23,18 +23,18 @@ HPGpool hpgMakePool(size_t blockSize, size_t nBlocks, char name[32]){
     return (void *) pool;
 }
 
-void hpgDeletePool(HPGpool pool){
+void hpsDeletePool(HPSpool pool){
     struct pool *data = (struct pool*) pool;
     if (data->nextPool)
-	hpgDeletePool(data->nextPool);
+	hpsDeletePool(data->nextPool);
     free(pool);
 }
 
-void hpgClearPool(HPGpool pool){
+void hpsClearPool(HPSpool pool){
     int i;
     struct pool *data = (struct pool*) pool;
     if (data->nextPool)
-	hpgClearPool(data->nextPool);
+	hpsClearPool(data->nextPool);
     char *poolStart = &((char *) pool)[sizeof(struct pool)];
     const unsigned int size = data->blockSize;
     const unsigned int nBlocks = data->nBlocks;
@@ -47,7 +47,7 @@ void hpgClearPool(HPGpool pool){
     *last = NULL;
 }
 
-static HPGpool newestPool(HPGpool pool){
+static HPSpool newestPool(HPSpool pool){
     struct pool *data = (struct pool*) pool;
     if (data->nextPool)
 	return newestPool(data->nextPool);
@@ -55,17 +55,17 @@ static HPGpool newestPool(HPGpool pool){
 	return pool;
 }
 
-static void growPool(HPGpool pool){
+static void growPool(HPSpool pool){
     struct pool *data = (struct pool*) pool;
     fprintf(stderr, "Warning: had to grow pool: %s\n", data->name);
-    HPGpool newest = newestPool(pool);
+    HPSpool newest = newestPool(pool);
     struct pool *newestData = (struct pool*) newest;
-    newestData->nextPool = hpgMakePool(data->blockSize, data->nBlocks, "");
+    newestData->nextPool = hpsMakePool(data->blockSize, data->nBlocks, "");
     struct pool *newData = (struct pool*) newestData->nextPool;
     data->freeBlock = newData->freeBlock;
 }
 
-void *hpgAllocateFrom(HPGpool pool){
+void *hpsAllocateFrom(HPSpool pool){
     #ifdef DEBUG
       if (!pool){
       fprintf(stderr, "Fatal: trying to allocate to a pool that doesn't exist!\n");
@@ -82,7 +82,7 @@ void *hpgAllocateFrom(HPGpool pool){
     return block;
 }
 
-void hpgDeleteFrom(void *block, HPGpool pool){
+void hpsDeleteFrom(void *block, HPSpool pool){
     struct pool *data = (struct pool*) pool;
     void **b = (void **)block;
     *b = data->freeBlock;

@@ -3,8 +3,8 @@
 #include <hypersceneLighting.h>
 #include "memory.h"
 
-unsigned int hpgLightPoolSize = 1024;
-static HPGvector lightQueue;
+unsigned int hpsLightPoolSize = 1024;
+static HPSvector lightQueue;
 static bool initialized = false;
 
 typedef struct {
@@ -20,93 +20,93 @@ typedef struct {
     Point direction;
     float spotAngle;
     float intensity;
-    HPGpool *pool;
+    HPSpool *pool;
 } Light;
 
 typedef struct {
     Color ambient;
-    HPGpool *lightPool;
+    HPSpool *lightPool;
 } SceneLighting;
 
-unsigned int hpgMaxLights = 8;
+unsigned int hpsMaxLights = 8;
 unsigned int currentLights;
-unsigned int *hpgNCurrentLights = &currentLights;
-float *hpgCurrentLightPositions;
-float *hpgCurrentLightColors;
-float *hpgCurrentLightDirections;
-float *hpgCurrentLightIntensities;
+unsigned int *hpsNCurrentLights = &currentLights;
+float *hpsCurrentLightPositions;
+float *hpsCurrentLightColors;
+float *hpsCurrentLightDirections;
+float *hpsCurrentLightIntensities;
 
-void hpgInitLighting(void **data){
+void hpsInitLighting(void **data){
     if (!initialized){
-        hpgInitVector(&lightQueue, 16);
-        hpgCurrentLightPositions = malloc(sizeof(float) * hpgMaxLights * 3);
-        hpgCurrentLightDirections = malloc(sizeof(float) * hpgMaxLights * 3);
-        hpgCurrentLightColors = malloc(sizeof(float) * hpgMaxLights * 3);
-        hpgCurrentLightIntensities = malloc(sizeof(float) * hpgMaxLights);
+        hpsInitVector(&lightQueue, 16);
+        hpsCurrentLightPositions = malloc(sizeof(float) * hpsMaxLights * 3);
+        hpsCurrentLightDirections = malloc(sizeof(float) * hpsMaxLights * 3);
+        hpsCurrentLightColors = malloc(sizeof(float) * hpsMaxLights * 3);
+        hpsCurrentLightIntensities = malloc(sizeof(float) * hpsMaxLights);
         initialized = true;
     }
     SceneLighting *sLighting = malloc(sizeof(SceneLighting));
-    sLighting->lightPool = hpgMakePool(sizeof(Light), hpgLightPoolSize, "Light pool");
+    sLighting->lightPool = hpsMakePool(sizeof(Light), hpsLightPoolSize, "Light pool");
     *data = sLighting;
 }
 
-void hpgDeleteLighting(void *data){
+void hpsDeleteLighting(void *data){
     SceneLighting *sLighting = (SceneLighting *) data;
-    hpgDeletePool(sLighting->lightPool);
+    hpsDeletePool(sLighting->lightPool);
 }
 
 // TODO: Cache lights?
-void hpgLightingPreRender(void *data){
+void hpsLightingPreRender(void *data){
     currentLights = lightQueue.size;
-    currentLights = (currentLights > hpgMaxLights) ? hpgMaxLights : currentLights;
+    currentLights = (currentLights > hpsMaxLights) ? hpsMaxLights : currentLights;
     int i;
     for (i = 0; i < currentLights; i++){
-        HPGnode *node = (HPGnode *) lightQueue.data[i];
-        Light *l = (Light *) hpgNodeData(node);
-        float *bs = hpgNodeBoundingSphere(node);
-        hpgCurrentLightIntensities[i] = l->intensity;
-        hpgCurrentLightPositions[i*3]   = bs[0];
-        hpgCurrentLightPositions[i*3+1] = bs[1];
-        hpgCurrentLightPositions[i*3+2] = bs[2];
-        hpgCurrentLightColors[i*3]   = l->color.r;
-        hpgCurrentLightColors[i*3+1] = l->color.g;
-        hpgCurrentLightColors[i*3+2] = l->color.b;
-        hpgCurrentLightDirections[i*3]   = l->direction.x;
-        hpgCurrentLightDirections[i*3+1] = l->direction.y;
-        hpgCurrentLightDirections[i*3+2] = l->direction.z;
-        hpgCurrentLightDirections[i*3+3] = l->spotAngle;
+        HPSnode *node = (HPSnode *) lightQueue.data[i];
+        Light *l = (Light *) hpsNodeData(node);
+        float *bs = hpsNodeBoundingSphere(node);
+        hpsCurrentLightIntensities[i] = l->intensity;
+        hpsCurrentLightPositions[i*3]   = bs[0];
+        hpsCurrentLightPositions[i*3+1] = bs[1];
+        hpsCurrentLightPositions[i*3+2] = bs[2];
+        hpsCurrentLightColors[i*3]   = l->color.r;
+        hpsCurrentLightColors[i*3+1] = l->color.g;
+        hpsCurrentLightColors[i*3+2] = l->color.b;
+        hpsCurrentLightDirections[i*3]   = l->direction.x;
+        hpsCurrentLightDirections[i*3+1] = l->direction.y;
+        hpsCurrentLightDirections[i*3+2] = l->direction.z;
+        hpsCurrentLightDirections[i*3+3] = l->spotAngle;
     }
 }
 
-void hpgLightingPostRender(void *data){
+void hpsLightingPostRender(void *data){
     lightQueue.size = 0;
 }
 
-void hpgLightingVisibleNode(void *data, HPGnode *node){
-    hpgPush(&lightQueue, node);
+void hpsLightingVisibleNode(void *data, HPSnode *node){
+    hpsPush(&lightQueue, node);
 }
 
-void hpgLightingUpdate(void *data){
+void hpsLightingUpdate(void *data){
     // Nothing to be done
 }
 
-HPGextension lighting = {hpgInitLighting,
-                         hpgLightingPreRender,
-                         hpgLightingPostRender,
-                         hpgLightingVisibleNode,
-                         hpgLightingUpdate,
-                         hpgDeleteLighting};
+HPSextension lighting = {hpsInitLighting,
+                         hpsLightingPreRender,
+                         hpsLightingPostRender,
+                         hpsLightingVisibleNode,
+                         hpsLightingUpdate,
+                         hpsDeleteLighting};
 
-HPGextension *hpgLighting = &lighting;
+HPSextension *hpsLighting = &lighting;
 
-void hpgDeleteLight(void *light){
+void hpsDeleteLight(void *light){
     Light *l = (Light *) light;
-    hpgDeleteFrom(l, l->pool);
+    hpsDeleteFrom(l, l->pool);
 }
 
-HPGnode *hpgAddLight(HPGscene *scene, float* color, float i, float *direction, float spotAngle){
-    SceneLighting *sLighting = (SceneLighting *) hpgExtensionData(scene, &lighting);
-    Light *light = hpgAllocateFrom(sLighting->lightPool);
+HPSnode *hpsAddLight(HPSscene *scene, float* color, float i, float *direction, float spotAngle){
+    SceneLighting *sLighting = (SceneLighting *) hpsExtensionData(scene, &lighting);
+    Light *light = hpsAllocateFrom(sLighting->lightPool);
     light->pool = sLighting->lightPool;
     light->color.r = color[0];
     light->color.g = color[1];
@@ -116,43 +116,43 @@ HPGnode *hpgAddLight(HPGscene *scene, float* color, float i, float *direction, f
     light->direction.y = direction[1];
     light->direction.z = direction[2];
     light->spotAngle = spotAngle;
-    return hpgAddNode((HPGnode *) scene, (void *) light, 
-                      (HPGpipeline *) &lighting, hpgDeleteLight);
+    return hpsAddNode((HPSnode *) scene, (void *) light, 
+                      (HPSpipeline *) &lighting, hpsDeleteLight);
 }
 
-void hpgSetLightColor(HPGnode *node, float* color){
-    Light *l = (Light *) hpgNodeData(node);
+void hpsSetLightColor(HPSnode *node, float* color){
+    Light *l = (Light *) hpsNodeData(node);
     l->color.r = color[0];
     l->color.g = color[1];
     l->color.b = color[2];
 }
 
-void hpgSetLightIntensity(HPGnode *node, float i){
-    Light *l = (Light *) hpgNodeData(node);
+void hpsSetLightIntensity(HPSnode *node, float i){
+    Light *l = (Light *) hpsNodeData(node);
     l->intensity = i;
 }
 
-void hpgSetLightDirection(HPGnode *node, float* dir){
-    Light *l = (Light *) hpgNodeData(node);
+void hpsSetLightDirection(HPSnode *node, float* dir){
+    Light *l = (Light *) hpsNodeData(node);
     l->direction.x = dir[0];
     l->direction.y = dir[1];
     l->direction.z = dir[2];
 }
 
-void hpgSetLightSpotAngle(HPGnode *node, float a){
-    Light *l = (Light *) hpgNodeData(node);
+void hpsSetLightSpotAngle(HPSnode *node, float a){
+    Light *l = (Light *) hpsNodeData(node);
     l->spotAngle = a;
 }
 
-void hpgSetAmbientLight(HPGscene *scene, float* color){
-    SceneLighting *sLighting = (SceneLighting *) hpgExtensionData(scene, &lighting);
+void hpsSetAmbientLight(HPSscene *scene, float* color){
+    SceneLighting *sLighting = (SceneLighting *) hpsExtensionData(scene, &lighting);
     sLighting->ambient.r = color[0];
     sLighting->ambient.g = color[1];
     sLighting->ambient.b = color[2];
 }
 
-float *hpgAmbientLight(HPGscene *scene){
-    SceneLighting *sLighting = (SceneLighting *) hpgExtensionData(scene, &lighting);
+float *hpsAmbientLight(HPSscene *scene){
+    SceneLighting *sLighting = (SceneLighting *) hpsExtensionData(scene, &lighting);
     return (float *) &sLighting->ambient;
 }
  

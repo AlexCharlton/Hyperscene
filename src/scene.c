@@ -2,35 +2,35 @@
 #include <string.h>
 #include "scene.h"
 
-unsigned int hpgNodePoolSize = 4096, hpgBoundingSpherePoolSize = 4096, hpgTransformPoolSize = 4096, hpgPartitionPoolSize = 4096;
+unsigned int hpsNodePoolSize = 4096, hpsBoundingSpherePoolSize = 4096, hpsTransformPoolSize = 4096, hpsPartitionPoolSize = 4096;
 
-static HPGpool *pipelinePool;
-static HPGvector activeScenes, freeScenes;
+static HPSpool *pipelinePool;
+static HPSvector activeScenes, freeScenes;
 
-void hpgInitScenes(HPGwindowSizeFun windowSizeFun){
-    hpgInitCameras();
-    hpgInitVector(&activeScenes, 16);
-    hpgInitVector(&freeScenes, 16);
-    hpgSetWindowSizeFun(windowSizeFun);
-    pipelinePool = hpgMakePool(sizeof(struct pipeline), 256, "Pipeline pool");
+void hpsInitScenes(HPSwindowSizeFun windowSizeFun){
+    hpsInitCameras();
+    hpsInitVector(&activeScenes, 16);
+    hpsInitVector(&freeScenes, 16);
+    hpsSetWindowSizeFun(windowSizeFun);
+    pipelinePool = hpsMakePool(sizeof(struct pipeline), 256, "Pipeline pool");
 }
 
 /* Nodes */
-static void freeNode(HPGnode *node, HPGscene *scene){
+static void freeNode(HPSnode *node, HPSscene *scene){
     int i;
     if (node->delete) node->delete(node->data);
     if (node->children.capacity){
-	HPGvector *v = &node->children;
+	HPSvector *v = &node->children;
 	for (i = 0; i < v->size; i++)
 	    freeNode(v->data[i], scene);
-	hpgDeleteVector(v);
+	hpsDeleteVector(v);
     }
 }
 
-static void updateNode(HPGnode *node, HPGscene *scene){
+static void updateNode(HPSnode *node, HPSscene *scene){
     int i;
     if (node->needsUpdate){
-        if ((HPGscene *) node->parent == scene){
+        if ((HPSscene *) node->parent == scene){
             hpmQuaternionRotation((float *) &node->rotation, node->transform);
             hpmTranslate((float *) &node->position, node->transform);
         } else {
@@ -46,7 +46,7 @@ static void updateNode(HPGnode *node, HPGscene *scene){
         hpmMat4VecMult(node->transform, (float*) bs);
 	scene->partitionInterface->updateNode(&node->partitionData);
         for (i = 0; i < node->children.size; i++){
-            HPGnode *child = node->children.data[i];
+            HPSnode *child = node->children.data[i];
             child->needsUpdate = true;
             updateNode(child, scene);
         }
@@ -62,20 +62,20 @@ static void initBoundingSphere(BoundingSphere *bs){
     bs->r = 1;
 }
 
-static HPGscene *getScene(HPGnode *node){
+static HPSscene *getScene(HPSnode *node){
     if (!node->parent)
-        return (HPGscene *) node;
+        return (HPSscene *) node;
     return getScene(node->parent);
 }
 
-HPGnode *hpgAddNode(HPGnode *parent, void *data,
-                    HPGpipeline *pipeline,
+HPSnode *hpsAddNode(HPSnode *parent, void *data,
+                    HPSpipeline *pipeline,
                     void (*deleteFunc)(void *)){
-    HPGscene *scene = getScene(parent);
-    HPGnode *node = hpgAllocateFrom(scene->nodePool);
-    node->transform = hpgAllocateFrom(scene->transformPool);
+    HPSscene *scene = getScene(parent);
+    HPSnode *node = hpsAllocateFrom(scene->nodePool);
+    node->transform = hpsAllocateFrom(scene->transformPool);
     node->partitionData.data = node;
-    node->partitionData.boundingSphere = hpgAllocateFrom(scene->boundingSpherePool);
+    node->partitionData.boundingSphere = hpsAllocateFrom(scene->boundingSpherePool);
     hpmIdentityMat4(node->transform);
     initBoundingSphere(node->partitionData.boundingSphere);
     node->position.x = 0.0; node->position.y = 0.0; node->position.z = 0.0;
@@ -86,136 +86,136 @@ HPGnode *hpgAddNode(HPGnode *parent, void *data,
     node->parent = parent;
     node->delete = deleteFunc;
     node->needsUpdate = true;
-    hpgInitVector(&node->children, 0);
+    hpsInitVector(&node->children, 0);
     scene->partitionInterface->addNode(&node->partitionData, scene->partitionStruct);
-    if ((HPGscene *) parent == scene)
-        hpgPush(&scene->topLevelNodes, node);
+    if ((HPSscene *) parent == scene)
+        hpsPush(&scene->topLevelNodes, node);
     else
-        hpgPush(&parent->children, node);
+        hpsPush(&parent->children, node);
     return node;
 }
 
-static void deleteNode(HPGnode *node, HPGscene *scene){
+static void deleteNode(HPSnode *node, HPSscene *scene){
     int i;
     scene->partitionInterface->removeNode(&node->partitionData);
-    hpgDeleteFrom(node->partitionData.boundingSphere, scene->boundingSpherePool);
-    hpgDeleteFrom(node->transform, scene->transformPool);
+    hpsDeleteFrom(node->partitionData.boundingSphere, scene->boundingSpherePool);
+    hpsDeleteFrom(node->transform, scene->transformPool);
     for (i = 0; i < node->children.size; i++)
         deleteNode(node->children.data[i], scene);
-    if ((HPGscene *) node->parent == scene)
-        hpgRemove(&scene->topLevelNodes, node);
+    if ((HPSscene *) node->parent == scene)
+        hpsRemove(&scene->topLevelNodes, node);
     else
-        hpgRemove(&node->parent->children, node);
+        hpsRemove(&node->parent->children, node);
     freeNode(node, scene);
 }
 
-void hpgDeleteNode(HPGnode *node){
+void hpsDeleteNode(HPSnode *node){
     deleteNode(node, getScene(node));
 }
 
-void hpgSetNodeBoundingSphere(HPGnode *node, float radius){
+void hpsSetNodeBoundingSphere(HPSnode *node, float radius){
     node->partitionData.boundingSphere->r = radius;
     node->needsUpdate = true;
 }
 
-float *hpgNodeBoundingSphere(HPGnode *node){
+float *hpsNodeBoundingSphere(HPSnode *node){
     return (float *) node->partitionData.boundingSphere;
 }
 
-void hpgMoveNode(HPGnode *node, float *vec){
+void hpsMoveNode(HPSnode *node, float *vec){
     node->position.x += vec[0];
     node->position.y += vec[1];
     node->position.z += vec[2];
     node->needsUpdate = true;
 }
 
-void hpgSetNodePosition(HPGnode *node, float *p){
+void hpsSetNodePosition(HPSnode *node, float *p){
     node->position.x = p[0];
     node->position.y = p[1];
     node->position.z = p[2];
     node->needsUpdate = true;
 }
 
-float* hpgNodeRotation(HPGnode *node){
+float* hpsNodeRotation(HPSnode *node){
     return (float *) &node->rotation;
 }
 
-float* hpgNodePosition(HPGnode *node){
+float* hpsNodePosition(HPSnode *node){
     return (float *) &node->position;
 }
 
-float* hpgNodeTransform(HPGnode *node){
+float* hpsNodeTransform(HPSnode *node){
     return node->transform;
 }
 
-float* hpgNodeData(HPGnode *node){
+float* hpsNodeData(HPSnode *node){
     return node->data;
 }
 
 /* Scenes */
-HPGscene *hpgMakeScene(void *partitionInterface){
-    HPGscene *scene = (freeScenes.size) ?
-	hpgPop(&freeScenes) : malloc(sizeof(HPGscene));
+HPSscene *hpsMakeScene(void *partitionInterface){
+    HPSscene *scene = (freeScenes.size) ?
+	hpsPop(&freeScenes) : malloc(sizeof(HPSscene));
     scene->partitionInterface = (PartitionInterface *) partitionInterface;
-    scene->nodePool = hpgMakePool(sizeof(HPGnode), hpgNodePoolSize, "Node pool");
-    scene->transformPool = hpgMakePool(sizeof(float) * 16, hpgTransformPoolSize,
+    scene->nodePool = hpsMakePool(sizeof(HPSnode), hpsNodePoolSize, "Node pool");
+    scene->transformPool = hpsMakePool(sizeof(float) * 16, hpsTransformPoolSize,
 				       "Transform pool");
-    scene->boundingSpherePool = hpgMakePool(sizeof(BoundingSphere),
-					    hpgBoundingSpherePoolSize,
+    scene->boundingSpherePool = hpsMakePool(sizeof(BoundingSphere),
+					    hpsBoundingSpherePoolSize,
 					    "Bounding sphere pool");
-    scene->partitionPool = hpgMakePool(scene->partitionInterface->structSize,
-                                       hpgPartitionPoolSize,
+    scene->partitionPool = hpsMakePool(scene->partitionInterface->structSize,
+                                       hpsPartitionPoolSize,
 				      "Spatial partition pool");
     scene->partitionStruct = scene->partitionInterface->new(scene->partitionPool);
     scene->null = NULL;
-    hpgInitVector(&scene->topLevelNodes, 1024);
-    hpgInitVector(&scene->extensions, 4);
-    hpgPush(&activeScenes, (void *) scene);
+    hpsInitVector(&scene->topLevelNodes, 1024);
+    hpsInitVector(&scene->extensions, 4);
+    hpsPush(&activeScenes, (void *) scene);
     return scene;
 }
 
-void hpgDeleteScene(HPGscene *scene){
+void hpsDeleteScene(HPSscene *scene){
     int i;
     for (i = 0; i < scene->topLevelNodes.size; i++)
         freeNode(scene->topLevelNodes.data[i], scene);
-    hpgDeleteExtensions(scene);
-    hpgClearPool(scene->nodePool);
-    hpgClearPool(scene->transformPool);
-    hpgClearPool(scene->boundingSpherePool);
-    hpgClearPool(scene->partitionPool);
-    hpgRemove(&activeScenes, (void *) scene);
-    hpgPush(&freeScenes, (void *) scene);
+    hpsDeleteExtensions(scene);
+    hpsClearPool(scene->nodePool);
+    hpsClearPool(scene->transformPool);
+    hpsClearPool(scene->boundingSpherePool);
+    hpsClearPool(scene->partitionPool);
+    hpsRemove(&activeScenes, (void *) scene);
+    hpsPush(&freeScenes, (void *) scene);
 }
 
-void hpgActiveateScene(HPGscene *s){
-    hpgPush(&activeScenes, (void *) s);
+void hpsActiveateScene(HPSscene *s){
+    hpsPush(&activeScenes, (void *) s);
 }
 
-void hpgDeactiveateScene(HPGscene *s){
-    hpgRemove(&activeScenes, (void *) s);
+void hpsDeactiveateScene(HPSscene *s){
+    hpsRemove(&activeScenes, (void *) s);
 }
 
-static void hpgUpdateScene(HPGscene *scene){
+static void hpsUpdateScene(HPSscene *scene){
     int i;
     for (i = 0; i < scene->topLevelNodes.size; i++)
         updateNode(scene->topLevelNodes.data[i], scene);
-    hpgUpdateExtensions(scene);
+    hpsUpdateExtensions(scene);
 }
 
-void hpgUpdateScenes(){
+void hpsUpdateScenes(){
     int i;
     for (i = 0; i < activeScenes.size; i++)
-	hpgUpdateScene((HPGscene *) activeScenes.data[i]);
+	hpsUpdateScene((HPSscene *) activeScenes.data[i]);
 }
 
 
 
 /* Pipelines */
-HPGpipeline *hpgAddPipeline(void (*preRender)(void *),
+HPSpipeline *hpsAddPipeline(void (*preRender)(void *),
 			    void (*render)(void *),
 			    void (*postRender)(),
                             bool hasAlpha){
-    HPGpipeline *pipeline = hpgAllocateFrom(pipelinePool);
+    HPSpipeline *pipeline = hpsAllocateFrom(pipelinePool);
     pipeline->hasAlpha = hasAlpha;
     pipeline->preRender = preRender;
     pipeline->render = render;
@@ -223,68 +223,64 @@ HPGpipeline *hpgAddPipeline(void (*preRender)(void *),
     return pipeline;
 }
 
-void hpgPipelineAlpha(HPGpipeline *pipeline, bool hasAlpha){
-    pipeline->hasAlpha = hasAlpha;
-}
-
-void hpgDeletePipeline(HPGpipeline *pipeline){
-    hpgDeleteFrom(pipeline, pipelinePool);
+void hpsDeletePipeline(HPSpipeline *pipeline){
+    hpsDeleteFrom(pipeline, pipelinePool);
 }
 
 /* Extensions */
 // Add a node with the extension as the pipeline to have it passed to visibleNode when rendering
 
-void hpgActivateExtension(HPGscene *scene, HPGextension *extension){
-    hpgPush(&scene->extensions, (void *) extension);
-    hpgPush(&scene->extensions, NULL);
+void hpsActivateExtension(HPSscene *scene, HPSextension *extension){
+    hpsPush(&scene->extensions, (void *) extension);
+    hpsPush(&scene->extensions, NULL);
     extension->init(&scene->extensions.data[scene->extensions.size-1]);
 }
 
-void *hpgExtensionData(HPGscene *scene, HPGextension *extension){
+void *hpsExtensionData(HPSscene *scene, HPSextension *extension){
     int i;
     for (i = 0; i < scene->extensions.size; i += 2){
-        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        HPSextension *e = (HPSextension *) scene->extensions.data[i];
         if (e == extension) return scene->extensions.data[i+1];
     }
 }
 
-void hpgPreRenderExtensions(HPGscene *scene){
+void hpsPreRenderExtensions(HPSscene *scene){
     int i;
     for (i = 0; i < scene->extensions.size; i += 2){
-        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        HPSextension *e = (HPSextension *) scene->extensions.data[i];
         e->preRender(scene->extensions.data[i+1]);
     }
 }
 
-void hpgPostRenderExtensions(HPGscene *scene){
+void hpsPostRenderExtensions(HPSscene *scene){
     int i;
     for (i = 0; i < scene->extensions.size; i += 2){
-        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        HPSextension *e = (HPSextension *) scene->extensions.data[i];
         e->postRender(scene->extensions.data[i+1]);
     }
 }
 
-void hpgVisibleNodeExtensions(HPGscene *scene, HPGnode *node){
+void hpsVisibleNodeExtensions(HPSscene *scene, HPSnode *node){
     int i;
     for (i = 0; i < scene->extensions.size; i += 2){
-        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        HPSextension *e = (HPSextension *) scene->extensions.data[i];
         if ((void*) node->pipeline == (void*) e)
             e->visibleNode(scene->extensions.data[i+1], node);
     }
 }
 
-void hpgUpdateExtensions(HPGscene *scene){
+void hpsUpdateExtensions(HPSscene *scene){
     int i;
     for (i = 0; i < scene->extensions.size; i += 2){
-        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        HPSextension *e = (HPSextension *) scene->extensions.data[i];
         e->update(scene->extensions.data[i+1]);
     }
 }
 
-void hpgDeleteExtensions(HPGscene *scene){
+void hpsDeleteExtensions(HPSscene *scene){
     int i;
     for (i = 0; i < scene->extensions.size; i += 2){
-        HPGextension *e = (HPGextension *) scene->extensions.data[i];
+        HPSextension *e = (HPSextension *) scene->extensions.data[i];
         e->delete(scene->extensions.data[i+1]);
     }
 }

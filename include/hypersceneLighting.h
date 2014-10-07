@@ -1,25 +1,23 @@
-typedef struct material HPGmaterial;
+extern HPSextension *hpsLighting;
 
-extern HPGextension *hpgLighting;
+extern unsigned int hpsMaxLights;
 
-extern unsigned int hpgMaxLights;
+extern unsigned int *hpsNCurrentLights;
+extern float *hpsCurrentLightPositions;
+extern float *hpsCurrentLightColors;
+extern float *hpsCurrentLightIntensities;
+extern float *hpsCurrentLightDirections;
 
-extern unsigned int *hpgNCurrentLights;
-extern float *hpgCurrentLightPositions;
-extern float *hpgCurrentLightColors;
-extern float *hpgCurrentLightIntensities;
-extern float *hpgCurrentLightDirections;
+HPSnode *hpsAddLight(HPSscene *scene, float* color, float i, float *direction, float spotAngle);
 
-HPGnode *hpgAddLight(HPGscene *scene, float* color, float i, float *direction, float spotAngle);
+void hpsSetLightColor(HPSnode *node, float* color);
 
-void hpgSetLightColor(HPGnode *node, float* color);
+void hpsSetLightIntensity(HPSnode *node, float i);
 
-void hpgSetLightIntensity(HPGnode *node, float i);
+void hpsSetLightDirection(HPSnode *node, float* dir);
 
-void hpgSetLightDirection(HPGnode *node, float* dir);
+void hpsSetLightSpotAngle(HPSnode *node, float a);
 
-void hpgSetLightSpotAngle(HPGnode *node, float a);
+void hpsSetAmbientLight(HPSscene *scene, float* color);
 
-void hpgSetAmbientLight(HPGscene *scene, float* color);
-
-float *hpgAmbientLight(HPGscene *scene);
+float *hpsAmbientLight(HPSscene *scene);

@@ -12,54 +12,57 @@ typedef enum {
     RIGHT, LEFT, TOP, BOTTOM, NEAR, FAR
 } Faces;
 
-static HPGvector cameraList, activeCameras, renderQueue, alphaQueue;
-static HPGwindowSizeFun windowSizefun;
+static HPSvector cameraList, activeCameras, renderQueue, alphaQueue;
+static HPSwindowSizeFun windowSizefun;
 
-static HPGcamera currentCamera;
+static HPScamera currentCamera;
+static float currentInverseTransposeModel[16];
 
-float *hpgCurrentCameraPosition(){
+float *hpsCurrentCameraPosition(){
     return (float *) &currentCamera.position;
 }
 
-float *hpgCurrentCameraProjection(){
+float *hpsCurrentCameraProjection(){
     return currentCamera.projection;
 }
 
-float *hpgCurrentCameraView(){
+float *hpsCurrentCameraView(){
     return currentCamera.view;
 }
 
-float *hpgCurrentCameraViewProjection(){
+float *hpsCurrentCameraViewProjection(){
     return currentCamera.viewProjection;
 }
 
-float *hpgCurrentCameraModelViewProjection(){
+float *hpsCurrentCameraModelViewProjection(){
     return currentCamera.modelViewProjection;
 }
 
-float hpgCurrentInverseTransposeModel[16];
+float *hpsCurrentInverseTransposeModel(){
+    return currentInverseTransposeModel;
+}
 
-void hpgSetWindowSizeFun(HPGwindowSizeFun fun){ windowSizefun = fun; }
+void hpsSetWindowSizeFun(HPSwindowSizeFun fun){ windowSizefun = fun; }
 
 static void addToQueue(Node *node){
-    HPGnode *n = (HPGnode *) node->data;
+    HPSnode *n = (HPSnode *) node->data;
     if (!n->pipeline) return;
     if (n->pipeline->hasAlpha == 1){
-	hpgPush(&alphaQueue, n);
+	hpsPush(&alphaQueue, n);
     } else if (n->pipeline->hasAlpha == 0) {
-	hpgPush(&renderQueue, n);
+	hpsPush(&renderQueue, n);
     } else {
-        hpgVisibleNodeExtensions(currentCamera.scene, node->data);
+        hpsVisibleNodeExtensions(currentCamera.scene, node->data);
     }
 }
 
-static void renderNode(HPGnode *node, HPGcamera *camera){
+static void renderNode(HPSnode *node, HPScamera *camera){
     float inverse[16];
     hpmMultMat4(camera->viewProjection, node->transform, 
                 camera->modelViewProjection);
 #ifndef NO_INVERSE_TRANSPOSE
     hpmCameraInverse(node->transform, inverse);
-    hpmTranspose(inverse, hpgCurrentInverseTransposeModel);
+    hpmTranspose(inverse, currentInverseTransposeModel);
 #endif
     node->pipeline->render(node->data);
 }
@@ -70,8 +73,8 @@ static void clearQueues(){
 }
 
 static int xNegative(const void *a, const void *b){
-    BoundingSphere *ba = ((HPGnode *) a)->partitionData.boundingSphere;
-    BoundingSphere *bb = ((HPGnode *) b)->partitionData.boundingSphere;
+    BoundingSphere *ba = ((HPSnode *) a)->partitionData.boundingSphere;
+    BoundingSphere *bb = ((HPSnode *) b)->partitionData.boundingSphere;
     float xa = ba->x + ba->r;
     float xb = bb->x + bb->r;
     if (xa < xb) return 1;
@@ -79,8 +82,8 @@ static int xNegative(const void *a, const void *b){
     return 0;
 }
 static int xPositive(const void *a, const void *b){
-    BoundingSphere *ba = ((HPGnode *) a)->partitionData.boundingSphere;
-    BoundingSphere *bb = ((HPGnode *) b)->partitionData.boundingSphere;
+    BoundingSphere *ba = ((HPSnode *) a)->partitionData.boundingSphere;
+    BoundingSphere *bb = ((HPSnode *) b)->partitionData.boundingSphere;
     float xa = ba->x + ba->r;
     float xb = bb->x + bb->r;
     if (xa > xb) return 1;
@@ -88,8 +91,8 @@ static int xPositive(const void *a, const void *b){
     return 0;
 }
 static int yNegative(const void *a, const void *b){
-    BoundingSphere *ba = ((HPGnode *) a)->partitionData.boundingSphere;
-    BoundingSphere *bb = ((HPGnode *) b)->partitionData.boundingSphere;
+    BoundingSphere *ba = ((HPSnode *) a)->partitionData.boundingSphere;
+    BoundingSphere *bb = ((HPSnode *) b)->partitionData.boundingSphere;
     float ya = ba->y + ba->r;
     float yb = bb->y + bb->r;
     if (ya < yb) return 1;
@@ -97,8 +100,8 @@ static int yNegative(const void *a, const void *b){
     return 0;
 }
 static int yPositive(const void *a, const void *b){
-    BoundingSphere *ba = ((HPGnode *) a)->partitionData.boundingSphere;
-    BoundingSphere *bb = ((HPGnode *) b)->partitionData.boundingSphere;
+    BoundingSphere *ba = ((HPSnode *) a)->partitionData.boundingSphere;
+    BoundingSphere *bb = ((HPSnode *) b)->partitionData.boundingSphere;
     float ya = ba->y + ba->r;
     float yb = bb->y + bb->r;
     if (ya > yb) return 1;
@@ -106,8 +109,8 @@ static int yPositive(const void *a, const void *b){
     return 0;
 }
 static int zNegative(const void *a, const void *b){
-    BoundingSphere *ba = ((HPGnode *) a)->partitionData.boundingSphere;
-    BoundingSphere *bb = ((HPGnode *) b)->partitionData.boundingSphere;
+    BoundingSphere *ba = ((HPSnode *) a)->partitionData.boundingSphere;
+    BoundingSphere *bb = ((HPSnode *) b)->partitionData.boundingSphere;
     float za = ba->z + ba->r;
     float zb = bb->z + bb->r;
     if (za < zb) return 1;
@@ -115,8 +118,8 @@ static int zNegative(const void *a, const void *b){
     return 0;
 }
 static int zPositive(const void *a, const void *b){
-    BoundingSphere *ba = ((HPGnode *) a)->partitionData.boundingSphere;
-    BoundingSphere *bb = ((HPGnode *) b)->partitionData.boundingSphere;
+    BoundingSphere *ba = ((HPSnode *) a)->partitionData.boundingSphere;
+    BoundingSphere *bb = ((HPSnode *) b)->partitionData.boundingSphere;
     float za = ba->z + ba->r;
     float zb = bb->z + bb->r;
     if (za > zb) return 1;
@@ -125,51 +128,51 @@ static int zPositive(const void *a, const void *b){
 }
 
 static int xGreaterThan(const void *a, const void *b){
-    float xa = ((HPGnode *) a)->partitionData.boundingSphere->x;
-    float xb = ((HPGnode *) b)->partitionData.boundingSphere->x;
+    float xa = ((HPSnode *) a)->partitionData.boundingSphere->x;
+    float xb = ((HPSnode *) b)->partitionData.boundingSphere->x;
     if (xa < xb) return 1;
     else if (xa > xb) return -1;
     return 0;
 }
 static int xLessThan(const void *a, const void *b){
-    float xa = ((HPGnode *) a)->partitionData.boundingSphere->x;
-    float xb = ((HPGnode *) b)->partitionData.boundingSphere->x;
+    float xa = ((HPSnode *) a)->partitionData.boundingSphere->x;
+    float xb = ((HPSnode *) b)->partitionData.boundingSphere->x;
     if (xa > xb) return 1;
     else if (xa < xb) return -1;
     return 0;
 }
 static int yGreaterThan(const void *a, const void *b){
-    float ya = ((HPGnode *) a)->partitionData.boundingSphere->y;
-    float yb = ((HPGnode *) b)->partitionData.boundingSphere->y;
+    float ya = ((HPSnode *) a)->partitionData.boundingSphere->y;
+    float yb = ((HPSnode *) b)->partitionData.boundingSphere->y;
     if (ya < yb) return 1;
     else if (ya > yb) return -1;
     return 0;
 }
 static int yLessThan(const void *a, const void *b){
-    float ya = ((HPGnode *) a)->partitionData.boundingSphere->y;
-    float yb = ((HPGnode *) b)->partitionData.boundingSphere->y;
+    float ya = ((HPSnode *) a)->partitionData.boundingSphere->y;
+    float yb = ((HPSnode *) b)->partitionData.boundingSphere->y;
     if (ya > yb) return 1;
     else if (ya < yb) return -1;
     return 0;
 }
 static int zGreaterThan(const void *a, const void *b){
-    float za = ((HPGnode *) a)->partitionData.boundingSphere->z;
-    float zb = ((HPGnode *) b)->partitionData.boundingSphere->z;
+    float za = ((HPSnode *) a)->partitionData.boundingSphere->z;
+    float zb = ((HPSnode *) b)->partitionData.boundingSphere->z;
     if (za < zb) return 1;
     else if (za > zb) return -1;
     return 0;
 }
 static int zLessThan(const void *a, const void *b){
-    float za = ((HPGnode *) a)->partitionData.boundingSphere->z;
-    float zb = ((HPGnode *) b)->partitionData.boundingSphere->z;
+    float za = ((HPSnode *) a)->partitionData.boundingSphere->z;
+    float zb = ((HPSnode *) b)->partitionData.boundingSphere->z;
     if (za > zb) return 1;
     else if (za < zb) return -1;
     return 0;
 }
 
 static int programSort(const void *a, const void *b){
-    HPGpipeline *pa = ((HPGnode *) a)->pipeline;
-    HPGpipeline *pb = ((HPGnode *) b)->pipeline;
+    HPSpipeline *pa = ((HPSnode *) a)->pipeline;
+    HPSpipeline *pb = ((HPSnode *) b)->pipeline;
     if (pa < pb) return -1;
     else if (pa > pb) return 1;
     return 0;
@@ -201,7 +204,7 @@ int nonAlphaObjects = 0;
 int alphaObjects = 0;
 #endif 
 
-static void renderQueues(HPGcamera *camera){
+static void renderQueues(HPScamera *camera){
 #ifdef DEBUG
     int nonAlpha = renderQueue.size;
     int alpha = alphaQueue.size;
@@ -217,22 +220,22 @@ static void renderQueues(HPGcamera *camera){
     int (*renderSort)(const void*, const void*) = NULL;
     setSortFuns(&camera->planes[NEAR], &alphaSort, &renderSort);
     qsort(renderQueue.data, renderQueue.size, sizeof(void *), &programSort);
-    HPGnode **nodes = (HPGnode **) &renderQueue.data[0];
+    HPSnode **nodes = (HPSnode **) &renderQueue.data[0];
     for (i = 0; i < renderQueue.size;){
-        HPGnode *n = *nodes;
+        HPSnode *n = *nodes;
         p = n->pipeline;
         p->preRender(n->data);
 #ifdef NO_REVERSE_PAINTER
         renderNode(n, camera);
         for (count = 1; count < (renderQueue.size - i);){
-            HPGnode *m = *(++nodes);
+            HPSnode *m = *(++nodes);
             if (m->pipeline == p){
                 renderNode(m, camera);
                 count++;
             } else break;
         }
 #else
-        HPGnode **m = nodes + 1;
+        HPSnode **m = nodes + 1;
         for (count = 1; count < (renderQueue.size - i);){
             if ((*m++)->pipeline == p){
                 count++;
@@ -249,14 +252,14 @@ static void renderQueues(HPGcamera *camera){
         i += count;
     }
     qsort(alphaQueue.data, alphaQueue.size, sizeof(void *), alphaSort);
-    nodes = (HPGnode **) &alphaQueue.data[0];
+    nodes = (HPSnode **) &alphaQueue.data[0];
     for (i = 0; i < alphaQueue.size;){
-        HPGnode *n = *nodes;
+        HPSnode *n = *nodes;
         p = n->pipeline;
         p->preRender(n->data);
         renderNode(n, camera);
         for (count = 1; count < (alphaQueue.size - i);){
-            HPGnode *m = *(++nodes);
+            HPSnode *m = *(++nodes);
             if (m->pipeline == p){
                 renderNode(m, camera);
                 count++;
@@ -271,7 +274,7 @@ static void renderQueues(HPGcamera *camera){
 http://web.archive.org/web/20120531231005/http://crazyjoke.free.fr/doc/3D/plane%20extraction.pdf
 */
 /* Normals (pointing in) are (a, b, c) */
-static void computePlanes(HPGcamera *camera){
+static void computePlanes(HPScamera *camera){
     Plane *ps = camera->planes;
     HPMmat4 *m = (HPMmat4 *) camera->viewProjection;
     ps[LEFT].a   = m->_41 + m->_11; ps[LEFT].b   = m->_42 + m->_12;
@@ -288,9 +291,9 @@ static void computePlanes(HPGcamera *camera){
     ps[FAR].c    = m->_43 - m->_33; ps[FAR].d    = m->_44 - m->_34;
 }
 
-void hpgRenderCamera(HPGcamera *camera){
+void hpsRenderCamera(HPScamera *camera){
     currentCamera = *camera; // Set current camera to this one
-    HPGcamera *c = &currentCamera;
+    HPScamera *c = &currentCamera;
     float cameraMat[16];
     clearQueues();
     switch (camera->style){
@@ -330,26 +333,26 @@ void hpgRenderCamera(HPGcamera *camera){
     computePlanes(c);
     camera->scene->partitionInterface->doVisible(c->scene->partitionStruct,
                                                  c->planes, &addToQueue);
-    hpgPreRenderExtensions(c->scene);
+    hpsPreRenderExtensions(c->scene);
     renderQueues(c);
-    hpgPostRenderExtensions(c->scene);
+    hpsPostRenderExtensions(c->scene);
     *camera = currentCamera; // Copy currentCamera back into camera
 }
 
-static void hpgOrthoCamera(int width, int height, HPGcamera *camera){
+static void hpsOrthoCamera(int width, int height, HPScamera *camera){
     hpmOrtho(width, height, camera->n, camera->f, camera->projection);
 }
 
-static void hpgPerspectiveCamera(int width, int height, HPGcamera *camera){
+static void hpsPerspectiveCamera(int width, int height, HPScamera *camera){
     hpmPerspective(width, height, camera->n, camera->f, camera->viewAngle,
 		   camera->projection);
 }
 
-HPGcamera *hpgMakeCamera(HPGcameraType type, HPGcameraStyle style, HPGscene *scene){
-    HPGcamera *camera = malloc(sizeof(struct camera));
-    camera->n = HPG_DEFAULT_NEAR_PLANE;
-    camera->f = HPG_DEFAULT_FAR_PLANE;
-    camera->viewAngle = HPG_DEFAULT_VIEW_ANGLE;
+HPScamera *hpsMakeCamera(HPScameraType type, HPScameraStyle style, HPSscene *scene){
+    HPScamera *camera = malloc(sizeof(struct camera));
+    camera->n = HPS_DEFAULT_NEAR_PLANE;
+    camera->f = HPS_DEFAULT_FAR_PLANE;
+    camera->viewAngle = HPS_DEFAULT_VIEW_ANGLE;
     camera->position.x = 0.0;
     camera->position.y = 0.0;
     camera->position.z = 0.0;
@@ -363,21 +366,21 @@ HPGcamera *hpgMakeCamera(HPGcameraType type, HPGcameraStyle style, HPGscene *sce
     camera->rotation.y = 0;
     camera->rotation.z = 0;
     camera->rotation.w = 1;
-    if (type == HPG_ORTHO)
-        camera->update = &hpgOrthoCamera;
+    if (type == HPS_ORTHO)
+        camera->update = &hpsOrthoCamera;
     else
-        camera->update = &hpgPerspectiveCamera;
+        camera->update = &hpsPerspectiveCamera;
     camera->style = style;
     camera->scene = scene;
-    hpgPush(&cameraList, (void *) camera);
-    hpgPush(&activeCameras, (void *) camera);
+    hpsPush(&cameraList, (void *) camera);
+    hpsPush(&activeCameras, (void *) camera);
     int w, h;
     windowSizefun(&w, &h);
     camera->update(w, h, camera);
     return camera;
 }
 
-void hpgSetCameraClipPlanes(HPGcamera *camera, float near, float far){
+void hpsSetCameraClipPlanes(HPScamera *camera, float near, float far){
     camera->n = near;
     camera->f = far;
     int w, h;
@@ -385,19 +388,19 @@ void hpgSetCameraClipPlanes(HPGcamera *camera, float near, float far){
     camera->update(w, h, camera);
 }
 
-void hpgSetCameraViewAngle(HPGcamera *camera, float angle){
+void hpsSetCameraViewAngle(HPScamera *camera, float angle){
     camera->viewAngle = angle;
     int w, h;
     windowSizefun(&w, &h);
     camera->update(w, h, camera);
 }
 
-void hpgDeleteCamera(HPGcamera *camera){
-    hpgRemove(&cameraList, (void *) camera);
+void hpsDeleteCamera(HPScamera *camera){
+    hpsRemove(&cameraList, (void *) camera);
     free(camera);
 }
 
-void hpgMoveCamera(HPGcamera *camera, float *vec){
+void hpsMoveCamera(HPScamera *camera, float *vec){
     if (camera->style == ORBIT){
         fprintf(stderr, "Can't move an orbit camera\n");
         return;
@@ -407,7 +410,7 @@ void hpgMoveCamera(HPGcamera *camera, float *vec){
     camera->position.z += vec[2];
 }
 
-void hpgSetCameraPosition(HPGcamera *camera, float *vec){
+void hpsSetCameraPosition(HPScamera *camera, float *vec){
     if (camera->style == ORBIT){
         fprintf(stderr, "Can't move an ORBIT camera\n");
         return;
@@ -417,11 +420,11 @@ void hpgSetCameraPosition(HPGcamera *camera, float *vec){
     camera->position.z = vec[2];
 }
 
-float *hpgCameraPosition(HPGcamera *camera){
+float *hpsCameraPosition(HPScamera *camera){
     return (float *) &camera->position;
 }
 
-float *hpgCameraRotation(HPGcamera *camera){
+float *hpsCameraRotation(HPScamera *camera){
     if (camera->style != POSITION){
         fprintf(stderr, "Can't rotation a non POSITION camera\n");
         return NULL;
@@ -429,7 +432,7 @@ float *hpgCameraRotation(HPGcamera *camera){
     return (float *) &camera->rotation;
 }
 
-void hpgSetCameraUp(HPGcamera *camera, float *up){
+void hpsSetCameraUp(HPScamera *camera, float *up){
     if (camera->style != LOOK_AT){
         fprintf(stderr, "Can't set up on a non LOOK_AT camera\n");
         return;
@@ -439,7 +442,7 @@ void hpgSetCameraUp(HPGcamera *camera, float *up){
     camera->up.z = up[2];
 }
 
-void hpgCameraLookAt(HPGcamera *camera, float *p){
+void hpsCameraLookAt(HPScamera *camera, float *p){
     if ((camera->style != ORBIT) && (camera->style != LOOK_AT)) {
         fprintf(stderr, "Can't set object to look at for a non LOOK_AT or ORBIT camera\n");
         return;
@@ -449,7 +452,7 @@ void hpgCameraLookAt(HPGcamera *camera, float *p){
     camera->object.z = p[2];
 }
 
-void hpgPanCamera(HPGcamera *camera, float angle){
+void hpsPanCamera(HPScamera *camera, float angle){
     if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
         fprintf(stderr, "Can't pan a non ORBIT or FIRST_PERSON camera\n");
         return;
@@ -457,7 +460,7 @@ void hpgPanCamera(HPGcamera *camera, float angle){
     camera->rotation.x += angle;
 }
 
-void hpgSetCameraPan(HPGcamera *camera, float angle){
+void hpsSetCameraPan(HPScamera *camera, float angle){
     if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
         fprintf(stderr, "Can't pan a non ORBIT or FIRST_PERSON camera\n");
         return;
@@ -466,7 +469,7 @@ void hpgSetCameraPan(HPGcamera *camera, float angle){
     camera->rotation.x = angle;
 }
 
-void hpgTiltCamera(HPGcamera *camera, float angle){
+void hpsTiltCamera(HPScamera *camera, float angle){
     if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
         fprintf(stderr, "Can't tilt a non ORBIT or FIRST_PERSON camera\n");
         return;
@@ -475,7 +478,7 @@ void hpgTiltCamera(HPGcamera *camera, float angle){
     camera->rotation.y = fmin(HALF_PI, fmax(-HALF_PI, camera->rotation.y));
 }
 
-void hpgSetCameraTilt(HPGcamera *camera, float angle){
+void hpsSetCameraTilt(HPScamera *camera, float angle){
     if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
         fprintf(stderr, "Can't tilt a non ORBIT or FIRST_PERSON camera\n");
         return;
@@ -483,7 +486,7 @@ void hpgSetCameraTilt(HPGcamera *camera, float angle){
     camera->rotation.y = fmin(HALF_PI, fmax(-HALF_PI, angle));
 }
 
-void hpgZoomCamera(HPGcamera *camera, float distance){
+void hpsZoomCamera(HPScamera *camera, float distance){
     if (camera->style != ORBIT){
         fprintf(stderr, "Can't zoom a non ORBIT camera\n");
         return;
@@ -492,7 +495,7 @@ void hpgZoomCamera(HPGcamera *camera, float distance){
     camera->rotation.w = (camera->rotation.w < FLT_MIN) ? FLT_MIN : camera->rotation.w;
 }
 
-void hpgSetCameraZoom(HPGcamera *camera, float distance){
+void hpsSetCameraZoom(HPScamera *camera, float distance){
     if (camera->style != ORBIT){
         fprintf(stderr, "Can't zoom a non ORBIT camera\n");
         return;
@@ -500,7 +503,7 @@ void hpgSetCameraZoom(HPGcamera *camera, float distance){
     camera->rotation.w = (distance < 0.0) ? 0.0 : distance;
 }
 
-void hpgRollCamera(HPGcamera *camera, float angle){
+void hpsRollCamera(HPScamera *camera, float angle){
     if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
         fprintf(stderr, "Can't roll a non ORBIT or FIRST_PERSON camera\n");
         return;
@@ -508,7 +511,7 @@ void hpgRollCamera(HPGcamera *camera, float angle){
     camera->rotation.z += angle;
 }
 
-void hpgSetCameraRoll(HPGcamera *camera, float angle){
+void hpsSetCameraRoll(HPScamera *camera, float angle){
     if ((camera->style != ORBIT) && (camera->style != LOOK_AT)) {
         fprintf(stderr, "Can't roll a non ORBIT or LOOK_AT camera\n");
         return;
@@ -516,15 +519,15 @@ void hpgSetCameraRoll(HPGcamera *camera, float angle){
     camera->rotation.z = angle;
 }
 
-void hpgResizeCameras(int width, int height){
+void hpsResizeCameras(int width, int height){
     int i;
     for (i = 0; i < cameraList.size; i++){
-	HPGcamera *camera = (HPGcamera *) cameraList.data[i];
+	HPScamera *camera = (HPScamera *) cameraList.data[i];
 	camera->update(width, height, camera);
     }
 }
 
-void hpgMoveCameraForward(HPGcamera *camera, float dist){
+void hpsMoveCameraForward(HPScamera *camera, float dist){
     if ((camera->style != FIRST_PERSON)) {
         fprintf(stderr, "Can't move a non FIRST_PERSON camera forward\n");
         return;
@@ -535,7 +538,7 @@ void hpgMoveCameraForward(HPGcamera *camera, float dist){
     camera->position.z -= dist * cosPan;
 }
 
-void hpgMoveCameraUp(HPGcamera *camera, float dist){
+void hpsMoveCameraUp(HPScamera *camera, float dist){
     if ((camera->style != FIRST_PERSON)) {
         fprintf(stderr, "Can't move a non FIRST_PERSON camera up\n");
         return;
@@ -545,7 +548,7 @@ void hpgMoveCameraUp(HPGcamera *camera, float dist){
     camera->position.y += dist;
 }
 
-void hpgStrafeCamera(HPGcamera *camera, float dist){
+void hpsStrafeCamera(HPScamera *camera, float dist){
     if ((camera->style != FIRST_PERSON)) {
         fprintf(stderr, "Can't strafe a non FIRST_PERSON camera\n");
         return;
@@ -557,23 +560,23 @@ void hpgStrafeCamera(HPGcamera *camera, float dist){
 }
 
 
-void hpgRenderCameras(){
+void hpsRenderCameras(){
     int i;
     for (i = 0; i < activeCameras.size; i++)
-	hpgRenderCamera((HPGcamera *) activeCameras.data[i]);
+	hpsRenderCamera((HPScamera *) activeCameras.data[i]);
 }
 
-void hpgActiveateCamera(HPGcamera *c){
-    hpgPush(&activeCameras, (void *) c);
+void hpsActiveateCamera(HPScamera *c){
+    hpsPush(&activeCameras, (void *) c);
 }
 
-void hpgDeactiveateCamera(HPGcamera *c){
-    hpgRemove(&activeCameras, (void *) c);
+void hpsDeactiveateCamera(HPScamera *c){
+    hpsRemove(&activeCameras, (void *) c);
 }
 
-void hpgInitCameras(){
-    hpgInitVector(&cameraList, 16);
-    hpgInitVector(&activeCameras, 16);
-    hpgInitVector(&renderQueue, 4096);
-    hpgInitVector(&alphaQueue, 1024);
+void hpsInitCameras(){
+    hpsInitVector(&cameraList, 16);
+    hpsInitVector(&activeCameras, 16);
+    hpsInitVector(&renderQueue, 4096);
+    hpsInitVector(&alphaQueue, 1024);
 }

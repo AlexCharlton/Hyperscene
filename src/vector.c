@@ -4,7 +4,7 @@
 #include "memory.h"
 
 /* Vectors */
-void hpgInitVector(HPGvector *vector, size_t initialCapacity){
+void hpsInitVector(HPSvector *vector, size_t initialCapacity){
     if (initialCapacity > 0){
 	vector->data = malloc(initialCapacity * sizeof(void *));
     } else {
@@ -15,27 +15,27 @@ void hpgInitVector(HPGvector *vector, size_t initialCapacity){
     vector->size = 0;
 }
 
-void hpgInitStaticVector(HPGvector *vector, void *data, size_t capacity){
+void hpsInitStaticVector(HPSvector *vector, void *data, size_t capacity){
     vector->data = data;
     vector->capacity = capacity;
     vector->isStatic = true;
     vector->size = 0;
 }
 
-HPGvector *hpgNewVector(size_t initialCapacity){
-    HPGvector *vec = malloc(sizeof(HPGvector));
-    hpgInitVector(vec, initialCapacity);
+HPSvector *hpsNewVector(size_t initialCapacity){
+    HPSvector *vec = malloc(sizeof(HPSvector));
+    hpsInitVector(vec, initialCapacity);
     return vec;
 }
 
-void hpgDeleteVector(HPGvector *vector){
+void hpsDeleteVector(HPSvector *vector){
     if (!vector->isStatic){
 	free(vector->data);
     }
     //free(vector); // TODO: Should this be here, if so, there needs to be some other deletion routine.
 }
 
-void hpgPush(HPGvector *vector, void *value){
+void hpsPush(HPSvector *vector, void *value){
     if (vector->size == vector->capacity){
 	if (vector->isStatic){
 	    void * new = malloc(2 * vector->capacity * sizeof(void *));
@@ -57,38 +57,38 @@ void hpgPush(HPGvector *vector, void *value){
     vector->data[vector->size++] = value;
 }
 
-void *hpgPop(HPGvector *vector){
+void *hpsPop(HPSvector *vector){
     if (vector->size == 0)
 	return NULL;
     return vector->data[--vector->size];
 }
 
-void hpgInsert(HPGvector *vector, void *value, size_t index){
+void hpsInsert(HPSvector *vector, void *value, size_t index){
     if (index >= vector->size) return;
     vector->data[index] = value;
 }
 
-void *hpgVectorValue(HPGvector *vector, size_t index){
+void *hpsVectorValue(HPSvector *vector, size_t index){
     if (index >= vector->size) return NULL;
     return vector->data[index];
 }
 
-size_t hpgLength(HPGvector *vector){
+size_t hpsLength(HPSvector *vector){
     return vector->size; 
 }
 
-bool hpgRemove(HPGvector *vector, void *el){
+bool hpsRemove(HPSvector *vector, void *el){
     int i;
     for (i = 0; i < vector->size; i++){
 	if (vector->data[i] == el){
-	    hpgRemoveNth(vector, i);
+	    hpsRemoveNth(vector, i);
 	    return true;
 	}
     }
     return false;
 }
 
-bool hpgRemoveNth(HPGvector *vector, size_t index){
+bool hpsRemoveNth(HPSvector *vector, size_t index){
     if (vector->size == 0 || index >= vector->size) return false;
     if (index <= (vector->size - 1))
 	memmove(&vector->data[index], &vector->data[index + 1],
