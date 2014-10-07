@@ -155,7 +155,7 @@ void hpsAABBupdateNode(Node *node){
     if (t != tree){
 	hpsAABBremoveNode(node);
 	addNode(node, t);
-        growExtents(tree, node->boundingSphere);
+        growExtents(t, node->boundingSphere);
     } else {
 	growExtents(t, node->boundingSphere);
 	shrinkExtents(t, node->boundingSphere);
