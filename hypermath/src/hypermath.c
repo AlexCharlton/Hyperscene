@@ -75,11 +75,20 @@ float hpmDot(const float *pointA, const float *pointB){
 void hpmMat4VecMult(const float *mat, float *point){
     HPMmat4 *m = (HPMmat4 *) mat;
     HPMpoint *p = (HPMpoint *) point;
-    float x, y, z;
+    float x, y, z, w;
     x = p->x; y = p->y; z = p->z;
+    w = m->_41*x + m->_42*y + m->_43*z + m->_44;
+
     p->x = m->_11*x + m->_12*y + m->_13*z + m->_14;
     p->y = m->_21*x + m->_22*y + m->_23*z + m->_24;
     p->z = m->_31*x + m->_32*y + m->_33*z + m->_34;
+
+    if (w != 1.0){
+        w = 1.0/w;
+        p->x *= w;
+        p->y *= w;
+        p->z *= w;
+    }
 }
 
 void hpmMat4VecArrayMult(const float *mat, float *vec, size_t length, size_t stride){
@@ -722,6 +731,32 @@ void hpmInverse(const float *mat, float *result){
         for (i = 0; i < 16; i++)
             result[i] = in[i] * det;
     }
+}
+
+void hpmFastInverseTranspose(const float *mat, float *result){
+    HPMmat4 *m = (HPMmat4 *) mat;
+    HPMmat4 *r = (HPMmat4 *) result;
+    // Rotation component
+    r->_11 = m->_11;
+    r->_12 = m->_12;
+    r->_13 = m->_13;
+
+    r->_21 = m->_21;
+    r->_22 = m->_22;
+    r->_23 = m->_23;
+
+    r->_31 = m->_31;
+    r->_32 = m->_32;
+    r->_33 = m->_33;
+    // Translation component
+    r->_41 = -(m->_11*m->_14 + m->_21*m->_24 + m->_31*m->_34);
+    r->_42 = -(m->_12*m->_14 + m->_22*m->_24 + m->_32*m->_34);
+    r->_43 = -(m->_13*m->_14 + m->_23*m->_24 + m->_33*m->_34);
+    // Last column
+    r->_14 = 0;
+    r->_24 = 0;
+    r->_34 = 0;
+    r->_44 = 1;
 }
 
 
