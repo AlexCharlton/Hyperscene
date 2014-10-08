@@ -35,6 +35,8 @@ extern unsigned int hpsNodePoolSize, hpsBoundingSpherePoolSize, hpsTransformPool
 void hpsInitScenes(HPSwindowSizeFun windowSizeFun);
 extern HPSpartitionInterface *hpsPartitionInterface;
 
+void hpsInit(HPSwindowSizeFun windowSizeFun);
+
 HPSnode *hpsAddNode(HPSnode *parent, void *data,
                     HPSpipeline *pipeline,
                     void (*deleteFunc)(void *));
