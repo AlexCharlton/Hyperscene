@@ -17,6 +17,7 @@ typedef struct node HPSnode;
 typedef struct scene HPSscene;
 typedef struct camera HPScamera;
 typedef struct pipeline HPSpipeline;
+typedef struct partitionInterface HPSpartitionInterface;
 typedef void (*HPSwindowSizeFun)(int *, int *);
 
 typedef struct HPSextension {
@@ -32,6 +33,7 @@ extern unsigned int hpsNodePoolSize, hpsBoundingSpherePoolSize, hpsTransformPool
     hpsPartitionPoolSize;
 
 void hpsInitScenes(HPSwindowSizeFun windowSizeFun);
+extern HPSpartitionInterface *hpsPartitionInterface;
 
 HPSnode *hpsAddNode(HPSnode *parent, void *data,
                     HPSpipeline *pipeline,
@@ -55,7 +57,7 @@ float* hpsNodeTransform(HPSnode *node);
 
 float* hpsNodeData(HPSnode *node);
 
-HPSscene *hpsMakeScene(void *partitionInterface);
+HPSscene *hpsMakeScene();
 
 void hpsDeleteScene(HPSscene *scene);
 

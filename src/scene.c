@@ -4,6 +4,8 @@
 
 unsigned int hpsNodePoolSize = 4096, hpsBoundingSpherePoolSize = 4096, hpsTransformPoolSize = 4096, hpsPartitionPoolSize = 4096;
 
+HPSpartitionInterface *hpsPartitionInterface;
+
 static HPSvector activeScenes, freeScenes;
 
 void hpsInitScenes(HPSwindowSizeFun windowSizeFun){
@@ -152,10 +154,10 @@ float* hpsNodeData(HPSnode *node){
 }
 
 /* Scenes */
-HPSscene *hpsMakeScene(void *partitionInterface){
+HPSscene *hpsMakeScene(){
     HPSscene *scene = (freeScenes.size) ?
 	hpsPop(&freeScenes) : malloc(sizeof(HPSscene));
-    scene->partitionInterface = (PartitionInterface *) partitionInterface;
+    scene->partitionInterface = hpsPartitionInterface;
     scene->nodePool = hpsMakePool(sizeof(HPSnode), hpsNodePoolSize, "Node pool");
     scene->transformPool = hpsMakePool(sizeof(float) * 16, hpsTransformPoolSize,
 				       "Transform pool");
@@ -181,7 +183,6 @@ void hpsDeleteScene(HPSscene *scene){
     hpsClearPool(scene->nodePool);
     hpsClearPool(scene->transformPool);
     hpsClearPool(scene->boundingSpherePool);
-    hpsClearPool(scene->partitionPool);
     hpsRemove(&activeScenes, (void *) scene);
     hpsPush(&freeScenes, (void *) scene);
 }
