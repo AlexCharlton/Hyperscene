@@ -39,7 +39,8 @@ typedef struct aabbTree {
     Node *nodesData[TREE_NODES];
 } AABBtree;
 
-AABBtree *hpsAABBnewTree(HPSpool *pool);
+AABBtree *hpsAABBnewTree();
+void hpsAABBdeleteTree(AABBtree *tree);
 AABBtree *hpsAABBfindNode(Node *node, AABBtree *tree);
 void hpsAABBaddNode(Node *node, AABBtree *tree);
 void hpsAABBremoveNode(Node *node);
@@ -56,6 +57,8 @@ static void maybeKillTree(AABBtree *tree);
 static void deleteTree(AABBtree *tree);
 static bool contains(AABBtree *t, BoundingSphere *bs);
 
+unsigned int hpsAABBpartitionPoolSize = 4096;
+
 #ifdef DEBUG
 void printTree(AABBtree *tree){
     printf("Tree %p [(%f %f) (%f %f) (%f %f)]", tree,
@@ -65,18 +68,25 @@ void printTree(AABBtree *tree){
 }
 #endif 
 
-PartitionInterface partitionInterface = {sizeof(AABBtree),
-                                         (void *(*)(HPSpool)) hpsAABBnewTree,
+PartitionInterface partitionInterface = {(void *(*)()) hpsAABBnewTree,
+                                         (void (*)(void *)) hpsAABBdeleteTree,
                                          (void (*)(Node *, void *)) hpsAABBaddNode,
                                          (void (*)(Node *)) hpsAABBremoveNode,
                                          (void (*)(Node *)) hpsAABBupdateNode,
                                          (void (*)(void *, Plane *, void (*)(Node *))) 
                                            hpsAABBdoVisible};
 
-void *hpsAABBpartitionInterface = (void *) &partitionInterface;
+PartitionInterface *hpsAABBpartitionInterface = &partitionInterface;
 
-AABBtree *hpsAABBnewTree(HPSpool *pool){
+
+AABBtree *hpsAABBnewTree(){
+    HPSpool pool =  hpsMakePool(sizeof(AABBtree), hpsAABBpartitionPoolSize, 
+                                "AABB tree pool");
     return newTree(pool, NULL);
+}
+
+void hpsAABBdeleteTree(AABBtree *tree){
+    hpsDeletePool(tree->pool);
 }
 
 static AABBtree *newTree(HPSpool pool, AABBtree *parent){

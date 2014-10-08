@@ -2,7 +2,7 @@
 #include <string.h>
 #include "scene.h"
 
-unsigned int hpsNodePoolSize = 4096, hpsBoundingSpherePoolSize = 4096, hpsTransformPoolSize = 4096, hpsPartitionPoolSize = 4096;
+unsigned int hpsNodePoolSize = 4096;
 
 HPSpartitionInterface *hpsPartitionInterface;
 
@@ -159,15 +159,12 @@ HPSscene *hpsMakeScene(){
 	hpsPop(&freeScenes) : malloc(sizeof(HPSscene));
     scene->partitionInterface = hpsPartitionInterface;
     scene->nodePool = hpsMakePool(sizeof(HPSnode), hpsNodePoolSize, "Node pool");
-    scene->transformPool = hpsMakePool(sizeof(float) * 16, hpsTransformPoolSize,
+    scene->transformPool = hpsMakePool(sizeof(float) * 16, hpsNodePoolSize,
 				       "Transform pool");
     scene->boundingSpherePool = hpsMakePool(sizeof(BoundingSphere),
-					    hpsBoundingSpherePoolSize,
+					    hpsNodePoolSize,
 					    "Bounding sphere pool");
-    scene->partitionPool = hpsMakePool(scene->partitionInterface->structSize,
-                                       hpsPartitionPoolSize,
-				      "Spatial partition pool");
-    scene->partitionStruct = scene->partitionInterface->new(scene->partitionPool);
+    scene->partitionStruct = scene->partitionInterface->new();
     scene->null = NULL;
     hpsInitVector(&scene->topLevelNodes, 1024);
     hpsInitVector(&scene->extensions, 4);
@@ -179,6 +176,7 @@ void hpsDeleteScene(HPSscene *scene){
     int i;
     for (i = 0; i < scene->topLevelNodes.size; i++)
         freeNode(scene->topLevelNodes.data[i], scene);
+    scene->partitionInterface->delete(scene->partitionStruct);
     hpsDeleteExtensions(scene);
     hpsClearPool(scene->nodePool);
     hpsClearPool(scene->transformPool);

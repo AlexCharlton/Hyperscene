@@ -29,10 +29,8 @@ typedef struct HPSextension {
     void (*delete)(void *);
 } HPSextension;
 
-extern unsigned int hpsNodePoolSize, hpsBoundingSpherePoolSize, hpsTransformPoolSize,
-    hpsPartitionPoolSize;
+extern unsigned int hpsNodePoolSize;
 
-void hpsInitScenes(HPSwindowSizeFun windowSizeFun);
 extern HPSpartitionInterface *hpsPartitionInterface;
 
 void hpsInit(HPSwindowSizeFun windowSizeFun);
@@ -145,6 +143,8 @@ void hpsDeactivateCamera(HPScamera *c);
 
 /* Spatial partitioning interfaces */
 extern void *hpsAABBpartitionInterface;
+
+extern unsigned int hpsAABBpartitionPoolSize;
 
 /* Extensions */
 void hpsActivateExtension(HPSscene *scene, HPSextension *extension);
