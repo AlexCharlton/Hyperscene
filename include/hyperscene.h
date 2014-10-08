@@ -55,7 +55,7 @@ float* hpsNodePosition(HPSnode *node);
 
 float* hpsNodeTransform(HPSnode *node);
 
-float* hpsNodeData(HPSnode *node);
+void* hpsNodeData(HPSnode *node);
 
 HPSscene *hpsMakeScene();
 

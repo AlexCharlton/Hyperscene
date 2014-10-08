@@ -149,7 +149,7 @@ float* hpsNodeTransform(HPSnode *node){
     return node->transform;
 }
 
-float* hpsNodeData(HPSnode *node){
+void* hpsNodeData(HPSnode *node){
     return node->data;
 }
 
