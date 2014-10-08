@@ -3,6 +3,8 @@
 #include "memory.h"
 #include "partition.h"
 
+typedef void (*cameraUpdateFun)(int, int, HPScamera*);
+
 struct pipeline {
     long isAlpha; // A boolean value expressed as a long so that pipeline can't be mixed up with an extension
     void (*preRender)(void *);
@@ -44,7 +46,7 @@ struct camera {
     float viewProjection[16];
     float modelViewProjection[16];
     Plane planes[6];
-    HPScameraUpdateFun update;
+    cameraUpdateFun update;
 };
 
 void hpsInitCameras();

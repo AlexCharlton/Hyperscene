@@ -18,7 +18,6 @@ typedef struct scene HPSscene;
 typedef struct camera HPScamera;
 typedef struct pipeline HPSpipeline;
 typedef void (*HPSwindowSizeFun)(int *, int *);
-typedef void (*HPScameraUpdateFun)(int, int, HPScamera*);
 
 typedef struct HPSextension {
     void (*init)(void **);
