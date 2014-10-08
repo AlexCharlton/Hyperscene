@@ -40,7 +40,7 @@ void hpsInitLighting(void **data){
     if (!initialized){
         hpsInitVector(&lightQueue, 16);
         hpsCurrentLightPositions = malloc(sizeof(float) * hpsMaxLights * 3);
-        hpsCurrentLightDirections = malloc(sizeof(float) * hpsMaxLights * 3);
+        hpsCurrentLightDirections = malloc(sizeof(float) * hpsMaxLights * 4);
         hpsCurrentLightColors = malloc(sizeof(float) * hpsMaxLights * 3);
         hpsCurrentLightIntensities = malloc(sizeof(float) * hpsMaxLights);
         initialized = true;
