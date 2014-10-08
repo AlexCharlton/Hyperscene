@@ -127,9 +127,19 @@ void hpsSetLightColor(HPSnode *node, float* color){
     l->color.b = color[2];
 }
 
+float *hpsLightColor(HPSnode *node){
+    Light *l = (Light *) hpsNodeData(node);
+    return (float *) &l->color;
+}
+
 void hpsSetLightIntensity(HPSnode *node, float i){
     Light *l = (Light *) hpsNodeData(node);
     l->intensity = i;
+}
+
+float hpsLightIntensity(HPSnode *node){
+    Light *l = (Light *) hpsNodeData(node);
+    return l->intensity;
 }
 
 void hpsSetLightDirection(HPSnode *node, float* dir){
@@ -138,10 +148,19 @@ void hpsSetLightDirection(HPSnode *node, float* dir){
     l->direction.y = dir[1];
     l->direction.z = dir[2];
 }
+float *hpsLightDirection(HPSnode *node){
+    Light *l = (Light *) hpsNodeData(node);
+    return (float *) &l->direction;
+}
 
 void hpsSetLightSpotAngle(HPSnode *node, float a){
     Light *l = (Light *) hpsNodeData(node);
     l->spotAngle = a;
+}
+
+float hpsLightSpotAngle(HPSnode *node){
+    Light *l = (Light *) hpsNodeData(node);
+    return l->spotAngle;
 }
 
 void hpsSetAmbientLight(HPSscene *scene, float* color){
