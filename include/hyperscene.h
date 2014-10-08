@@ -60,9 +60,9 @@ HPSscene *hpsMakeScene(void *partitionInterface);
 
 void hpsDeleteScene(HPSscene *scene);
 
-void hpsActiveateScene(HPSscene *s);
+void hpsActivateScene(HPSscene *s);
 
-void hpsDeactiveateScene(HPSscene *s);
+void hpsDeactivateScene(HPSscene *s);
 
 void hpsUpdateScenes();
 
@@ -136,9 +136,9 @@ void hpsResizeCameras(int width, int height);
 
 void hpsRenderCameras();
 
-void hpsActiveateCamera(HPScamera *c);
+void hpsActivateCamera(HPScamera *c);
 
-void hpsDeactiveateCamera(HPScamera *c);
+void hpsDeactivateCamera(HPScamera *c);
 
 /* Spatial partitioning interfaces */
 extern void *hpsAABBpartitionInterface;
