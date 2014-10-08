@@ -45,12 +45,10 @@ static void addToQueue(Node *node){
 }
 
 static void renderNode(HPSnode *node, HPScamera *camera){
-    float inverse[16];
     hpmMultMat4(camera->viewProjection, node->transform, 
                 camera->modelViewProjection);
 #ifndef NO_INVERSE_TRANSPOSE
-    hpmCameraInverse(node->transform, inverse);
-    hpmTranspose(inverse, currentInverseTransposeModel);
+    hpmFastInverseTranspose(node->transform, currentInverseTransposeModel);
 #endif
     node->pipeline->render(node->data);
 }
