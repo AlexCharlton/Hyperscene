@@ -57,7 +57,9 @@ static HPSpool newestPool(HPSpool pool){
 
 static void growPool(HPSpool pool){
     struct pool *data = (struct pool*) pool;
+#ifdef DEBUG
     fprintf(stderr, "Warning: had to grow pool: %s\n", data->name);
+#endif
     HPSpool newest = newestPool(pool);
     struct pool *newestData = (struct pool*) newest;
     newestData->nextPool = hpsMakePool(data->blockSize, data->nBlocks, "");
@@ -66,12 +68,12 @@ static void growPool(HPSpool pool){
 }
 
 void *hpsAllocateFrom(HPSpool pool){
-    #ifdef DEBUG
+#ifdef DEBUG
       if (!pool){
       fprintf(stderr, "Fatal: trying to allocate to a pool that doesn't exist!\n");
       exit(EXIT_FAILURE);
       }
-    #endif
+#endif
     struct pool *data = (struct pool*) pool;
     void **block = data->freeBlock;
     if (!block){
