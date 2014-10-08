@@ -139,6 +139,8 @@ void hpmTranspose(const float *mat, float *result);
 
 void hpmInverse(const float *mat, float *result);
 
+void hpmFastInverseTranspose(const float *mat, float *result);
+
 // Projection
 void hpmOrtho(int width, int height, float near, float far, float *mat);
 
