@@ -4,7 +4,6 @@
 
 unsigned int hpsNodePoolSize = 4096, hpsBoundingSpherePoolSize = 4096, hpsTransformPoolSize = 4096, hpsPartitionPoolSize = 4096;
 
-static HPSpool *pipelinePool;
 static HPSvector activeScenes, freeScenes;
 
 void hpsInitScenes(HPSwindowSizeFun windowSizeFun){
@@ -12,7 +11,7 @@ void hpsInitScenes(HPSwindowSizeFun windowSizeFun){
     hpsInitVector(&activeScenes, 16);
     hpsInitVector(&freeScenes, 16);
     hpsSetWindowSizeFun(windowSizeFun);
-    pipelinePool = hpsMakePool(sizeof(struct pipeline), 256, "Pipeline pool");
+    hpsPartitionInterface = hpsAABBpartitionInterface;
 }
 
 /* Nodes */
@@ -224,7 +223,7 @@ HPSpipeline *hpsAddPipeline(void (*preRender)(void *),
 }
 
 void hpsDeletePipeline(HPSpipeline *pipeline){
-    hpsDeleteFrom(pipeline, pipelinePool);
+    free(pipeline);
 }
 
 /* Extensions */
