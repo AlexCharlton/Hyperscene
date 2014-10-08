@@ -4,7 +4,7 @@
 #include "partition.h"
 
 struct pipeline {
-    long hasAlpha; // A boolean value expressed as a long so that pipeline can't be mixed up with an extension
+    long isAlpha; // A boolean value expressed as a long so that pipeline can't be mixed up with an extension
     void (*preRender)(void *);
     void (*render)(void *);
     void (*postRender)();

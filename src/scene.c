@@ -214,9 +214,9 @@ void hpsUpdateScenes(){
 HPSpipeline *hpsAddPipeline(void (*preRender)(void *),
 			    void (*render)(void *),
 			    void (*postRender)(),
-                            bool hasAlpha){
-    HPSpipeline *pipeline = hpsAllocateFrom(pipelinePool);
-    pipeline->hasAlpha = hasAlpha;
+                            bool isAlpha){
+    HPSpipeline *pipeline = malloc(sizeof(HPSpipeline));
+    pipeline->isAlpha = isAlpha;
     pipeline->preRender = preRender;
     pipeline->render = render;
     pipeline->postRender = postRender;
