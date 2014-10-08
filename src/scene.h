@@ -40,7 +40,7 @@ struct camera {
     HPScameraStyle style;
     HPMpoint position, up, object;
     float n, f, viewAngle;
-    HPMquat rotation; // pan, tilt, roll, distance for ORBIT camera
+    HPMquat rotation; // yaw, pitch, roll, distance for ORBIT camera
     float view[16];
     float projection[16];
     float viewProjection[16];

@@ -111,13 +111,13 @@ void hpsSetCameraUp(HPScamera *camera, float *up);
 
 void hpsCameraLookAt(HPScamera *camera, float *p);
 
-void hpsPanCamera(HPScamera *camera, float angle);
+void hpsYawCamera(HPScamera *camera, float angle);
 
-void hpsSetCameraPan(HPScamera *camera, float angle);
+void hpsSetCameraYaw(HPScamera *camera, float angle);
 
-void hpsTiltCamera(HPScamera *camera, float angle);
+void hpsPitchCamera(HPScamera *camera, float angle);
 
-void hpsSetCameraTilt(HPScamera *camera, float angle);
+void hpsSetCameraPitch(HPScamera *camera, float angle);
 
 void hpsZoomCamera(HPScamera *camera, float distance);
 

@@ -287,13 +287,13 @@ void hpsRenderCamera(HPScamera *camera){
     switch (camera->style){
     case ORBIT:
     {
-        float cosTilt = cos(c->rotation.y);
-        float sinTilt = sin(c->rotation.y);
-        float sinPan = sin(c->rotation.x);
-        float cosPan = cos(c->rotation.x);
-        c->position.x = c->object.x + c->rotation.w * cosTilt * sinPan;
-        c->position.y = c->object.y + c->rotation.w * sinTilt;
-        c->position.z = c->object.z + c->rotation.w * cosTilt * cosPan;
+        float cosPitch = cos(c->rotation.y);
+        float sinPitch = sin(c->rotation.y);
+        float sinYaw = sin(c->rotation.x);
+        float cosYaw = cos(c->rotation.x);
+        c->position.x = c->object.x + c->rotation.w * cosPitch * sinYaw;
+        c->position.y = c->object.y + c->rotation.w * sinPitch;
+        c->position.z = c->object.z + c->rotation.w * cosPitch * cosYaw;
         hpmYPRRotation(c->rotation.x, -c->rotation.y, c->rotation.z, cameraMat);
         hpmTranslate((float *) &c->position, cameraMat);
         hpmCameraInverse(cameraMat, c->view);
@@ -440,35 +440,35 @@ void hpsCameraLookAt(HPScamera *camera, float *p){
     camera->object.z = p[2];
 }
 
-void hpsPanCamera(HPScamera *camera, float angle){
+void hpsYawCamera(HPScamera *camera, float angle){
     if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't pan a non ORBIT or FIRST_PERSON camera\n");
+        fprintf(stderr, "Can't yaw a non ORBIT or FIRST_PERSON camera\n");
         return;
     }
     camera->rotation.x += angle;
 }
 
-void hpsSetCameraPan(HPScamera *camera, float angle){
+void hpsSetCameraYaw(HPScamera *camera, float angle){
     if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't pan a non ORBIT or FIRST_PERSON camera\n");
+        fprintf(stderr, "Can't yaw a non ORBIT or FIRST_PERSON camera\n");
         return;
     }
     camera->style = ORBIT;
     camera->rotation.x = angle;
 }
 
-void hpsTiltCamera(HPScamera *camera, float angle){
+void hpsPitchCamera(HPScamera *camera, float angle){
     if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't tilt a non ORBIT or FIRST_PERSON camera\n");
+        fprintf(stderr, "Can't pitch a non ORBIT or FIRST_PERSON camera\n");
         return;
     }
     camera->rotation.y += angle;
     camera->rotation.y = fmin(HALF_PI, fmax(-HALF_PI, camera->rotation.y));
 }
 
-void hpsSetCameraTilt(HPScamera *camera, float angle){
+void hpsSetCameraPitch(HPScamera *camera, float angle){
     if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't tilt a non ORBIT or FIRST_PERSON camera\n");
+        fprintf(stderr, "Can't pitch a non ORBIT or FIRST_PERSON camera\n");
         return;
     }
     camera->rotation.y = fmin(HALF_PI, fmax(-HALF_PI, angle));
@@ -521,10 +521,10 @@ void hpsMoveCameraForward(HPScamera *camera, float dist){
         fprintf(stderr, "Can't move a non FIRST_PERSON camera forward\n");
         return;
     }
-    float sinPan = sin(camera->rotation.x);
-    float cosPan = cos(camera->rotation.x);
-    camera->position.x += dist * sinPan;
-    camera->position.z -= dist * cosPan;
+    float sinYaw = sin(camera->rotation.x);
+    float cosYaw = cos(camera->rotation.x);
+    camera->position.x += dist * sinYaw;
+    camera->position.z -= dist * cosYaw;
 }
 
 void hpsMoveCameraUp(HPScamera *camera, float dist){
@@ -532,8 +532,8 @@ void hpsMoveCameraUp(HPScamera *camera, float dist){
         fprintf(stderr, "Can't move a non FIRST_PERSON camera up\n");
         return;
     }
-    float sinPan = sin(camera->rotation.x);
-    float cosPan = cos(camera->rotation.x);
+    float sinYaw = sin(camera->rotation.x);
+    float cosYaw = cos(camera->rotation.x);
     camera->position.y += dist;
 }
 
@@ -542,10 +542,10 @@ void hpsStrafeCamera(HPScamera *camera, float dist){
         fprintf(stderr, "Can't strafe a non FIRST_PERSON camera\n");
         return;
     }
-    float sinPan = sin(camera->rotation.x);
-    float cosPan = cos(camera->rotation.x);
-    camera->position.x += dist * cosPan;
-    camera->position.z += dist * sinPan;
+    float sinYaw = sin(camera->rotation.x);
+    float cosYaw = cos(camera->rotation.x);
+    camera->position.x += dist * cosYaw;
+    camera->position.z += dist * sinYaw;
 }
 
 
