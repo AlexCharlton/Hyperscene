@@ -566,11 +566,12 @@ void hpsRenderCameras(){
 	hpsRenderCamera((HPScamera *) activeCameras.data[i]);
 }
 
-void hpsActiveateCamera(HPScamera *c){
+void hpsActivateCamera(HPScamera *c){
+    hpsRemove(&activeCameras, (void *) c);
     hpsPush(&activeCameras, (void *) c);
 }
 
-void hpsDeactiveateCamera(HPScamera *c){
+void hpsDeactivateCamera(HPScamera *c){
     hpsRemove(&activeCameras, (void *) c);
 }
 

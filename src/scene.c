@@ -186,11 +186,12 @@ void hpsDeleteScene(HPSscene *scene){
     hpsPush(&freeScenes, (void *) scene);
 }
 
-void hpsActiveateScene(HPSscene *s){
+void hpsActivateScene(HPSscene *s){
+    hpsRemove(&activeScenes, (void *) s);
     hpsPush(&activeScenes, (void *) s);
 }
 
-void hpsDeactiveateScene(HPSscene *s){
+void hpsDeactivateScene(HPSscene *s){
     hpsRemove(&activeScenes, (void *) s);
 }
 
