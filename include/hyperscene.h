@@ -132,7 +132,7 @@ void hpsMoveCameraUp(HPScamera *camera, float dist);
 
 void hpsStrafeCamera(HPScamera *camera, float dist);
 
-void hpsResizeCameras(int width, int height);
+void hpsResizeCameras();
 
 void hpsRenderCameras();
 
