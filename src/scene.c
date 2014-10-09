@@ -249,6 +249,7 @@ void *hpsExtensionData(HPSscene *scene, HPSextension *extension){
         HPSextension *e = (HPSextension *) scene->extensions.data[i];
         if (e == extension) return scene->extensions.data[i+1];
     }
+    return NULL;
 }
 
 void hpsPreRenderExtensions(HPSscene *scene){
