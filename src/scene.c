@@ -45,6 +45,11 @@ static void updateNode(HPSnode *node, HPSscene *scene){
         bs->y = 0;
         bs->z = 0;
         hpmMat4VecMult(node->transform, (float*) bs);
+        if (node->pipeline && 
+            (node->pipeline->isAlpha != 1) && 
+            (node->pipeline->isAlpha != 0)){
+            hpsUpdateNodeExtensions(scene, node);
+        }
 	scene->partitionInterface->updateNode(&node->partitionData);
         for (i = 0; i < node->children.size; i++){
             HPSnode *child = node->children.data[i];
@@ -198,7 +203,6 @@ static void hpsUpdateScene(HPSscene *scene){
     int i;
     for (i = 0; i < scene->topLevelNodes.size; i++)
         updateNode(scene->topLevelNodes.data[i], scene);
-    hpsUpdateExtensions(scene);
 }
 
 void hpsUpdateScenes(){
@@ -268,11 +272,12 @@ void hpsVisibleNodeExtensions(HPSscene *scene, HPSnode *node){
     }
 }
 
-void hpsUpdateExtensions(HPSscene *scene){
+void hpsUpdateNodeExtensions(HPSscene *scene, HPSnode *node){
     int i;
     for (i = 0; i < scene->extensions.size; i += 2){
         HPSextension *e = (HPSextension *) scene->extensions.data[i];
-        e->update(scene->extensions.data[i+1]);
+        if ((void*) node->pipeline == (void*) e)
+            e->updateNode(scene->extensions.data[i+1], node);
     }
 }
 

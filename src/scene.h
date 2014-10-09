@@ -56,5 +56,5 @@ void hpsSetWindowSizeFun(HPSwindowSizeFun fun);
 void hpsPreRenderExtensions(HPSscene *scene);
 void hpsPostRenderExtensions(HPSscene *scene);
 void hpsVisibleNodeExtensions(HPSscene *scene, HPSnode *node);
-void hpsUpdateExtensions(HPSscene *scene);
+void hpsUpdateNodeExtensions(HPSscene *scene, HPSnode *node);
 void hpsDeleteExtensions(HPSscene *scene);

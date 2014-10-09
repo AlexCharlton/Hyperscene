@@ -17,14 +17,14 @@ void XpostRender(void *data){
 void XvisibleNode(void *data, HPGnode *node){
 }
 
-void Xupdate(void *data){
+void XupdateNode(void *data, HPGnode *node){
 }
 
 HPGextension x = {initX,
                   XpreRender,
                   XpostRender,
                   XvisibleNode,
-                  Xupdate,
+                  XupdateNode,
                   deleteX};
 
 HPGextension *X = &x; //external 

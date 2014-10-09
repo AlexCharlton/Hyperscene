@@ -25,7 +25,7 @@ typedef struct HPSextension {
     void (*preRender)(void *);
     void (*postRender)(void *);
     void (*visibleNode)(void *, HPSnode *node);
-    void (*update)(void *);
+    void (*updateNode)(void *, HPSnode *node);
     void (*delete)(void *);
 } HPSextension;
 
