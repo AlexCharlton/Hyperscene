@@ -530,8 +530,6 @@ void hpsMoveCameraUp(HPScamera *camera, float dist){
         fprintf(stderr, "Can't move a non FIRST_PERSON camera up\n");
         return;
     }
-    float sinYaw = sin(camera->rotation.x);
-    float cosYaw = cos(camera->rotation.x);
     camera->position.y += dist;
 }
 
