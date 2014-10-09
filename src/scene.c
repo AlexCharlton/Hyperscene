@@ -63,16 +63,16 @@ static void initBoundingSphere(BoundingSphere *bs){
     bs->r = 1;
 }
 
-static HPSscene *getScene(HPSnode *node){
+HPSscene *hpsGetScene(HPSnode *node){
     if (!node->parent)
         return (HPSscene *) node;
-    return getScene(node->parent);
+    return hpsGetScene(node->parent);
 }
 
 HPSnode *hpsAddNode(HPSnode *parent, void *data,
                     HPSpipeline *pipeline,
                     void (*deleteFunc)(void *)){
-    HPSscene *scene = getScene(parent);
+    HPSscene *scene = hpsGetScene(parent);
     HPSnode *node = hpsAllocateFrom(scene->nodePool);
     node->transform = hpsAllocateFrom(scene->transformPool);
     node->partitionData.data = node;
@@ -111,7 +111,7 @@ static void deleteNode(HPSnode *node, HPSscene *scene){
 }
 
 void hpsDeleteNode(HPSnode *node){
-    deleteNode(node, getScene(node));
+    deleteNode(node, hpsGetScene(node));
 }
 
 void hpsSetNodeBoundingSphere(HPSnode *node, float radius){

@@ -35,6 +35,8 @@ extern HPSpartitionInterface *hpsPartitionInterface;
 
 void hpsInit(HPSwindowSizeFun windowSizeFun);
 
+HPSscene *hpsGetScene(HPSnode *node);
+
 HPSnode *hpsAddNode(HPSnode *parent, void *data,
                     HPSpipeline *pipeline,
                     void (*deleteFunc)(void *));
