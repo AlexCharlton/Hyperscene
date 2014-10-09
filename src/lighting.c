@@ -104,8 +104,9 @@ void hpsDeleteLight(void *light){
     hpsDeleteFrom(l, l->pool);
 }
 
-HPSnode *hpsAddLight(HPSscene *scene, float* color, float i, float *direction, float spotAngle){
-    SceneLighting *sLighting = (SceneLighting *) hpsExtensionData(scene, &lighting);
+HPSnode *hpsAddLight(HPSnode *node, float* color, float i, float *direction, float spotAngle){
+    SceneLighting *sLighting = (SceneLighting *) hpsExtensionData(hpsGetScene(node), 
+                                                                  &lighting);
     Light *light = hpsAllocateFrom(sLighting->lightPool);
     light->pool = sLighting->lightPool;
     light->color.r = color[0];
@@ -116,7 +117,7 @@ HPSnode *hpsAddLight(HPSscene *scene, float* color, float i, float *direction, f
     light->direction.y = direction[1];
     light->direction.z = direction[2];
     light->spotAngle = spotAngle;
-    return hpsAddNode((HPSnode *) scene, (void *) light, 
+    return hpsAddNode(node, (void *) light, 
                       (HPSpipeline *) &lighting, hpsDeleteLight);
 }
 
