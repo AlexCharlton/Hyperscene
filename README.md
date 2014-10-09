@@ -307,7 +307,7 @@ The memory pool size of the `AABBpartitionInterface` can be set with
 
 which defaults to `4096`.
 
-If you wish to write a new partition interface, create a `partitionIterface` struct with the relevant function pointers:  [partition.h](https://github.com/AlexCharlton/Hyperscene/blob/master/src/partition.h).
+If you wish to write a new partition interface, create a `partitionIterface` struct with the relevant function pointers:  [`partition.h`](https://github.com/AlexCharlton/Hyperscene/blob/master/src/partition.h).
 
 ### Extensions
 Hyperscene features an extension system, so that the rendering of a scene can be augmented in new and exciting ways.
@@ -434,7 +434,7 @@ All of these function pointers *must* be set. `NULL` pointers will be dereferenc
 * Initial release
 
 ## Source repository
-Source available on [GitHub](https://github.com/AlexCharlton/hyperscene).
+Source available on [GitHub](https://github.com/AlexCharlton/Hyperscene).
 
 Bug reports and patches welcome! Bugs can be reported via GitHub or to alex.n.charlton at gmail.
 
