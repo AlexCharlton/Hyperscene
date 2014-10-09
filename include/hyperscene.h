@@ -51,6 +51,8 @@ void hpsMoveNode(HPSnode *node, float *vec);
 
 void hpsSetNodePosition(HPSnode *node, float *p);
 
+void hpsNodeNeedsUpdate(HPSnode *node);
+
 float* hpsNodeRotation(HPSnode *node);
 
 float* hpsNodePosition(HPSnode *node);

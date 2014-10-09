@@ -176,6 +176,7 @@ void hpsSetLightDirection(HPSnode *node, float* dir){
     l->direction.x = dir[0];
     l->direction.y = dir[1];
     l->direction.z = dir[2];
+    hpsNodeNeedsUpdate(node);
 }
 float *hpsLightDirection(HPSnode *node){
     Light *l = (Light *) hpsNodeData(node);

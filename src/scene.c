@@ -142,6 +142,10 @@ void hpsSetNodePosition(HPSnode *node, float *p){
     node->needsUpdate = true;
 }
 
+void hpsNodeNeedsUpdate(HPSnode *node){
+    node->needsUpdate = true;
+}
+
 float* hpsNodeRotation(HPSnode *node){
     return (float *) &node->rotation;
 }
