@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <hyperscene.h>
 #include <hypersceneLighting.h>
+#include <hypermath.h>
 #include "memory.h"
 
 unsigned int hpsLightPoolSize = 1024;
@@ -18,6 +19,7 @@ typedef struct {
 typedef struct {
     Color color;
     Point direction;
+    Point worldDirection;
     float spotAngle;
     float intensity;
     HPSpool *pool;
@@ -71,9 +73,9 @@ void hpsLightingPreRender(void *data){
         hpsCurrentLightColors[i*3]   = l->color.r;
         hpsCurrentLightColors[i*3+1] = l->color.g;
         hpsCurrentLightColors[i*3+2] = l->color.b;
-        hpsCurrentLightDirections[i*3]   = l->direction.x;
-        hpsCurrentLightDirections[i*3+1] = l->direction.y;
-        hpsCurrentLightDirections[i*3+2] = l->direction.z;
+        hpsCurrentLightDirections[i*3]   = l->worldDirection.x;
+        hpsCurrentLightDirections[i*3+1] = l->worldDirection.y;
+        hpsCurrentLightDirections[i*3+2] = l->worldDirection.z;
         hpsCurrentLightDirections[i*3+3] = l->spotAngle;
     }
 }
@@ -86,15 +88,41 @@ void hpsLightingVisibleNode(void *data, HPSnode *node){
     hpsPush(&lightQueue, node);
 }
 
-void hpsLightingUpdate(void *data){
-    // Nothing to be done
+void hpsLightingUpdateNode(void *data, HPSnode *node){
+    Light *l = (Light *) hpsNodeData(node);
+    if (!l->spotAngle) return;
+
+    HPMmat4 *trans = (HPMmat4 *) hpsNodeTransform(node);
+    HPMmat4 rot;
+    rot._11 = trans->_11;
+    rot._12 = trans->_12;
+    rot._13 = trans->_13;
+    rot._21 = trans->_21;
+    rot._22 = trans->_22;
+    rot._23 = trans->_23;
+    rot._31 = trans->_31;
+    rot._32 = trans->_32;
+    rot._33 = trans->_33;
+
+    rot._14 = 0;
+    rot._24 = 0;
+    rot._34 = 0;
+    rot._41 = 0;
+    rot._42 = 0;
+    rot._43 = 0;
+    rot._44 = 1;
+
+    l->worldDirection.x = l->direction.x;
+    l->worldDirection.y = l->direction.y;
+    l->worldDirection.z = l->direction.z;
+    hpmMat4VecMult((float *) &rot, (float *) &l->worldDirection);
 }
 
 HPSextension lighting = {hpsInitLighting,
                          hpsLightingPreRender,
                          hpsLightingPostRender,
                          hpsLightingVisibleNode,
-                         hpsLightingUpdate,
+                         hpsLightingUpdateNode,
                          hpsDeleteLighting};
 
 HPSextension *hpsLighting = &lighting;
@@ -175,4 +203,3 @@ float *hpsAmbientLight(HPSscene *scene){
     SceneLighting *sLighting = (SceneLighting *) hpsExtensionData(scene, &lighting);
     return (float *) &sLighting->ambient;
 }
- 
