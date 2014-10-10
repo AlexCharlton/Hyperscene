@@ -46,11 +46,11 @@ Create a new scene. The scene’s space is partitioned with the [partition inter
 
 Delete the given scene. 
 
-     void hpsActivateScene(HPSscene *s);
+     void hpsActivateScene(HPSscene *scene);
 
 Activate the given scene. If the scene is already active, this has no effect.
 
-     void hpsDeactivateScene(HPSscene *s);
+     void hpsDeactivateScene(HPSscene *scene);
 
 Deactivate the given scene.
 
@@ -91,7 +91,7 @@ Set the radius of the node’s bounding sphere. This is important to set so that
 
 Return the `(x y z radius)` bounding sphere of the node. The bounding sphere is positioned in world coordinates. This array returned should not be modified.
 
-     void hpsSetNodePosition(HPSnode *node, float *p);
+     void hpsSetNodePosition(HPSnode *node, float *position);
 
 Set the `(x y z)` position of the node relative to its parent.
 
@@ -168,11 +168,11 @@ Delete the given camera.
 
 Render the given camera. When cameras are rendered, all of the visible nodes are sorted: first into groups of nodes that have an alpha pipline or that don’t. Alpha nodes are sorted by decreasing distance from the camera and rendered last. Non-alpha nodes are sorted by pipeline. Each pipeline is then sorted again by increasing distance from the camera before they are rendered. Drawing the things that are closest to the camera first (“reverse painter” sorting) can help graphics hardware determine when later bits of the scene are hidden, thus saving some rendering time. Not all applications will benefit from this extra step, though, and it can be disabled by defining `NO_REVERSE_PAINTER` at compilation time.
 
-     void hpsActivateCamera(HPScamera *c);
+     void hpsActivateCamera(HPScamera *camera);
 
 Add the camera to the list of active cameras (or push it to the back of the list, thus setting it to be rendered last). New cameras are automatically activated.
 
-     void hpsDeactivateCamera(HPScamera *c);
+     void hpsDeactivateCamera(HPScamera *camera);
 
 Remove the camera from the list of active cameras.
 
@@ -215,7 +215,7 @@ Set the `(x y z)` point the *look-at* or *orbit* cameras are looking at.
 
      void hpsSetCameraUp(HPScamera *camera, float *up);
 
-Set the camera’s `(x y z)` up-vector. Cannot be called with a *look-at* camera.
+Set the camera’s `(x y z)` up-vector. Cannot be called with a non-*look-at* camera.
 
      void hpsYawCamera(HPScamera *camera, float angle);
 
@@ -262,7 +262,7 @@ Move the *first-person* camera up by `distance`.
 Move the *first-person* camera to the right by `distance`. Only the camera’s yaw is taken into account for the movement.
 
 #### Camera matrix and position access
-While rendering, it can be desirable to have pointers to various matrices relating to the camera and node being rendered. These pointers always point to the relevant value of the camera currently being rendered.
+While rendering, it can be desirable to have pointers to various matrices relating to the camera and node being rendered (e.g. to be used as uniform values). These pointers always point to the relevant value of the camera currently being rendered.
 
      float *hpsCurrentCameraPosition;
 
@@ -339,7 +339,7 @@ Scenes that use the lighting extension have an `(r g b)` ambient light associate
 
     float *hpsAmbientLight(HPSscene *scene);
 
-Returns the `(r g b)` ambient light color of the scene.
+Returns the `(r g b)` ambient light color of the scene. May be modified to change the scene’s ambient light.
 
      HPSnode *hpsAddLight(HPSnode *node, float* color, float intensity, float *direction, float spotAngle);
 
@@ -347,11 +347,11 @@ Adds a new light to the given node (or scene) with `(r g b)` `color`. `intensity
 
     void hpsSetLightColor(HPSnode *node, float *color);
 
-Sets the `(r g b)` color of the lights.
+Sets the `(r g b)` color of the light.
 
     float *hpsLightColor(HPSnode *node);
 
-Returns the `(r g b)` color of the lights.
+Returns the `(r g b)` color of the light.
 
     void hpsSetLightIntensity(HPSnode *node, float intensity);
 
@@ -363,19 +363,19 @@ Returns the intensity of the light.
 
     void hpsSetLightDirection(HPSnode *node, float *dir);
 
-Sets the `(x y z)` direction of the lights.
+Sets the `(x y z)` direction of the light.
 
     float *hpsLightDirection(HPSnode *node);
 
-Returns the `(x y z)` direction of the lights.
+Returns the `(x y z)` direction of the light.
 
     void hpsSetLightSpotAngle(HPSnode *node, float a);
 
-Sets the angle over which the light is spread;
+Sets the angle over which the light is spread.
 
     float hpsLightSpotAngle(HPSnode *node);
 
-Returns the angle over which the light is spread;
+Returns the angle over which the light is spread.
 
      unsigned int *hpsNCurrentLights;
 
