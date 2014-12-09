@@ -8,6 +8,7 @@ extern float *hpsCurrentLightPositions;
 extern float *hpsCurrentLightColors;
 extern float *hpsCurrentLightIntensities;
 extern float *hpsCurrentLightDirections;
+extern float *hpsCurrentAmbientLight;
 
 HPSnode *hpsAddLight(HPSnode *node, float* color, float i, float *direction, float spotAngle);
 
@@ -28,5 +29,3 @@ void hpsSetLightSpotAngle(HPSnode *node, float a);
 float hpsLightSpotAngle(HPSnode *node);
 
 void hpsSetAmbientLight(HPSscene *scene, float* color);
-
-float *hpsAmbientLight(HPSscene *scene);

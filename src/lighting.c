@@ -37,6 +37,7 @@ float *hpsCurrentLightPositions;
 float *hpsCurrentLightColors;
 float *hpsCurrentLightDirections;
 float *hpsCurrentLightIntensities;
+float *hpsCurrentAmbientLight;
 
 void hpsInitLighting(void **data){
     if (!initialized){
@@ -59,6 +60,9 @@ void hpsDeleteLighting(void *data){
 
 // TODO: Cache lights?
 void hpsLightingPreRender(void *data){
+    SceneLighting *sLighting = (SceneLighting *) data;
+    hpsCurrentAmbientLight = (float *) &sLighting->ambient;
+
     currentLights = lightQueue.size;
     currentLights = (currentLights > hpsMaxLights) ? hpsMaxLights : currentLights;
     int i;
@@ -198,9 +202,4 @@ void hpsSetAmbientLight(HPSscene *scene, float* color){
     sLighting->ambient.r = color[0];
     sLighting->ambient.g = color[1];
     sLighting->ambient.b = color[2];
-}
-
-float *hpsAmbientLight(HPSscene *scene){
-    SceneLighting *sLighting = (SceneLighting *) hpsExtensionData(scene, &lighting);
-    return (float *) &sLighting->ambient;
 }
