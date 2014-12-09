@@ -337,10 +337,6 @@ Only `hpsMaxLights` visible lights can be used at time in a scene (defaults to `
 
 Scenes that use the lighting extension have an `(r g b)` ambient light associated with them, set by this function.
 
-    float *hpsAmbientLight(HPSscene *scene);
-
-Returns the `(r g b)` ambient light color of the scene. May be modified to change the scene’s ambient light.
-
      HPSnode *hpsAddLight(HPSnode *node, float* color, float intensity, float *direction, float spotAngle);
 
 Adds a new light to the given node (or scene) with `(r g b)` `color`. `intensity` is the value associated with the brightness of the light. `direction` is an `(x y z)` vector that indicates the direction that the light is pointing. `spotAngle` indicates the angle that the light is spread over (defaulting to `0`, representing a non-spotlight source). An `HPSnode` is returned that can be moved, rotated, and sized like any other node.
@@ -376,6 +372,10 @@ Sets the angle over which the light is spread.
     float hpsLightSpotAngle(HPSnode *node);
 
 Returns the angle over which the light is spread.
+
+    float *hpsCurrentAmbientLight;
+
+A pointer to the the `(r g b)` ambient light color of the scene currently being rendered.
 
      unsigned int *hpsNCurrentLights;
 
