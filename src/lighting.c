@@ -46,6 +46,7 @@ void hpsInitLighting(void **data){
         hpsCurrentLightDirections = malloc(sizeof(float) * hpsMaxLights * 4);
         hpsCurrentLightColors = malloc(sizeof(float) * hpsMaxLights * 3);
         hpsCurrentLightIntensities = malloc(sizeof(float) * hpsMaxLights);
+        hpsCurrentAmbientLight = malloc(sizeof(float) * 3);
         initialized = true;
     }
     SceneLighting *sLighting = malloc(sizeof(SceneLighting));
@@ -61,7 +62,9 @@ void hpsDeleteLighting(void *data){
 // TODO: Cache lights?
 void hpsLightingPreRender(void *data){
     SceneLighting *sLighting = (SceneLighting *) data;
-    hpsCurrentAmbientLight = (float *) &sLighting->ambient;
+    hpsCurrentAmbientLight[0] = sLighting->ambient.r;
+    hpsCurrentAmbientLight[1] = sLighting->ambient.g;
+    hpsCurrentAmbientLight[2] = sLighting->ambient.b;
 
     currentLights = lightQueue.size;
     currentLights = (currentLights > hpsMaxLights) ? hpsMaxLights : currentLights;
