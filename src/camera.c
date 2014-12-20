@@ -382,6 +382,7 @@ void hpsSetCameraViewAngle(HPScamera *camera, float angle){
 }
 
 void hpsDeleteCamera(HPScamera *camera){
+    hpsDeactivateCamera(camera);
     hpsRemove(&cameraList, (void *) camera);
     free(camera);
 }
