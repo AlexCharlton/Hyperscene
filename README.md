@@ -168,6 +168,10 @@ Delete the given camera.
 
 Render the given camera. When cameras are rendered, all of the visible nodes are sorted: first into groups of nodes that have an alpha pipline or that don’t. Alpha nodes are sorted by decreasing distance from the camera and rendered last. Non-alpha nodes are sorted by pipeline. Each pipeline is then sorted again by increasing distance from the camera before they are rendered. Drawing the things that are closest to the camera first (“reverse painter” sorting) can help graphics hardware determine when later bits of the scene are hidden, thus saving some rendering time. Not all applications will benefit from this extra step, though, and it can be disabled by defining `NO_REVERSE_PAINTER` at compilation time.
 
+     void hpsUpdateCamera(HPScamera *camera);
+
+Update the given camera. This updates the view matrix of the camera to reflect any changes that may have occurred. This should always be done before rendering.
+
      void hpsActivateCamera(HPScamera *camera);
 
 Add the camera to the list of active cameras (or push it to the back of the list, thus setting it to be rendered last). New cameras are automatically activated.
@@ -179,6 +183,10 @@ Remove the camera from the list of active cameras.
      void hpsRenderCameras();
 
 Render all the active cameras.
+
+     void hpsUpdateCameras();
+
+Update all the active cameras.
 
      void hpsResizeCameras();
 
@@ -262,6 +270,19 @@ Move the *first-person* camera up by `distance`.
 Move the *first-person* camera to the right by `distance`. Only the camera’s yaw is taken into account for the movement.
 
 #### Camera matrix and position access
+     float *hpsCameraProjection(HPScamera *camera);
+
+Returns a pointer to the projection matrix of the camera.
+
+     float *hpsCameraView(HPScamera *camera);
+
+Returns a pointer to the view matrix of the camera.
+
+     float *hpsCameraViewProjection(HPScamera *camera);
+
+Returns a pointer to the `projection * view` matrix of the camera.
+
+##### Currently rendering camera
 While rendering, it can be desirable to have pointers to various matrices relating to the camera and node being rendered (e.g. to be used as uniform values). These pointers always point to the relevant value of the camera currently being rendered.
 
      float *hpsCurrentCameraPosition;
