@@ -93,6 +93,8 @@ float *hpsCurrentCameraViewProjection;
 
 float *hpsCurrentCameraModelViewProjection;
 
+void hpsUpdateCamera(HPScamera *camera);
+
 void hpsRenderCamera(HPScamera *camera);
 
 HPScamera *hpsMakeCamera(HPScameraType type, HPScameraStyle style, HPSscene *scene);
@@ -137,9 +139,17 @@ void hpsMoveCameraUp(HPScamera *camera, float dist);
 
 void hpsStrafeCamera(HPScamera *camera, float dist);
 
+float *hpsCameraProjection(HPScamera *camera);
+
+float *hpsCameraView(HPScamera *camera);
+
+float *hpsCameraViewProjection(HPScamera *camera);
+
 void hpsResizeCameras();
 
 void hpsRenderCameras();
+
+void hpsUpdateCameras();
 
 void hpsActivateCamera(HPScamera *c);
 

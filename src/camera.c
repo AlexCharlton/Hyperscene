@@ -277,11 +277,9 @@ static void computePlanes(HPScamera *camera){
     ps[FAR].c    = m->_43 - m->_33; ps[FAR].d    = m->_44 - m->_34;
 }
 
-void hpsRenderCamera(HPScamera *camera){
-    currentCamera = *camera; // Set current camera to this one
-    HPScamera *c = &currentCamera;
+void hpsUpdateCamera(HPScamera *camera){
+    HPScamera *c = camera;
     float cameraMat[16];
-    clearQueues();
     switch (camera->style){
     case ORBIT:
     {
@@ -316,6 +314,12 @@ void hpsRenderCamera(HPScamera *camera){
         exit(EXIT_FAILURE);
     }
     hpmMultMat4(c->projection, c->view, c->viewProjection);
+}
+
+void hpsRenderCamera(HPScamera *camera){
+    currentCamera = *camera; // Set current camera to this one
+    HPScamera *c = &currentCamera;
+    clearQueues();
     computePlanes(c);
     camera->scene->partitionInterface->doVisible(c->scene->partitionStruct,
                                                  c->planes, &addToQueue);
@@ -545,6 +549,23 @@ void hpsStrafeCamera(HPScamera *camera, float dist){
     camera->position.z += dist * sinYaw;
 }
 
+float *hpsCameraProjection(HPScamera *camera){
+    return camera->projection;
+}
+
+float *hpsCameraView(HPScamera *camera){
+    return camera->view;
+}
+
+float *hpsCameraViewProjection(HPScamera *camera){
+    return camera->viewProjection;
+}
+
+void hpsUpdateCameras(){
+    int i;
+    for (i = 0; i < activeCameras.size; i++)
+	hpsUpdateCamera((HPScamera *) activeCameras.data[i]);
+}
 
 void hpsRenderCameras(){
     int i;
