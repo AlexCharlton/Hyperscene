@@ -81,17 +81,17 @@ void hpsDeletePipeline(HPSpipeline *pipeline);
 
 /* Cameras */
 
-float *hpsCurrentInverseTransposeModel;
+extern float *hpsCurrentInverseTransposeModel;
 
-float *hpsCurrentCameraPosition;
+extern float *hpsCurrentCameraPosition;
 
-float *hpsCurrentCameraView;
+extern float *hpsCurrentCameraView;
 
-float *hpsCurrentCameraProjection;
+extern float *hpsCurrentCameraProjection;
 
-float *hpsCurrentCameraViewProjection;
+extern float *hpsCurrentCameraViewProjection;
 
-float *hpsCurrentCameraModelViewProjection;
+extern float *hpsCurrentCameraModelViewProjection;
 
 void hpsUpdateCamera(HPScamera *camera);
 
