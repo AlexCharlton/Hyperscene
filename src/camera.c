@@ -60,103 +60,31 @@ static void clearQueues(){
     alphaQueue.size = 0;
 }
 
-static int xNegative(const void *a, const void *b){
-    BoundingSphere *ba = (*((HPSnode **) a))->partitionData.boundingSphere;
-    BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
-    float xa = ba->x + ba->r;
-    float xb = bb->x + bb->r;
-    if (xa < xb) return 1;
-    else if (xa > xb) return -1;
-    return 0;
-}
-static int xPositive(const void *a, const void *b){
-    BoundingSphere *ba = (*((HPSnode **) a))->partitionData.boundingSphere;
-    BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
-    float xa = ba->x + ba->r;
-    float xb = bb->x + bb->r;
-    if (xa > xb) return 1;
-    else if (xa < xb) return -1;
-    return 0;
-}
-static int yNegative(const void *a, const void *b){
-    BoundingSphere *ba = (*((HPSnode **) a))->partitionData.boundingSphere;
-    BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
-    float ya = ba->y + ba->r;
-    float yb = bb->y + bb->r;
-    if (ya < yb) return 1;
-    else if (ya > yb) return -1;
-    return 0;
-}
-static int yPositive(const void *a, const void *b){
-    BoundingSphere *ba = (*((HPSnode **) a))->partitionData.boundingSphere;
-    BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
-    float ya = ba->y + ba->r;
-    float yb = bb->y + bb->r;
-    if (ya > yb) return 1;
-    else if (ya < yb) return -1;
-    return 0;
-}
-static int zNegative(const void *a, const void *b){
-    BoundingSphere *ba = (*((HPSnode **) a))->partitionData.boundingSphere;
-    BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
-    float za = ba->z + ba->r;
-    float zb = bb->z + bb->r;
-    if (za < zb) return 1;
-    else if (za > zb) return -1;
-    return 0;
-}
-static int zPositive(const void *a, const void *b){
-    BoundingSphere *ba = (*((HPSnode **) a))->partitionData.boundingSphere;
-    BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
-    float za = ba->z + ba->r;
-    float zb = bb->z + bb->r;
-    if (za > zb) return 1;
-    else if (za < zb) return -1;
-    return 0;
+static void xPositive(const HPMpoint *a, const HPMpoint *b, float *m, float *n){
+    *m = a->x; *n = b->x;
 }
 
-static int xGreaterThan(const void *a, const void *b){
-    float xa = (*((HPSnode **) a))->partitionData.boundingSphere->x;
-    float xb = (*((HPSnode **) b))->partitionData.boundingSphere->x;
-    if (xa < xb) return 1;
-    else if (xa > xb) return -1;
-    return 0;
+static void xNegative(const HPMpoint *a, const HPMpoint *b, float *m, float *n){
+    *m = -a->x; *n = -b->x;
 }
-static int xLessThan(const void *a, const void *b){
-    float xa = (*((HPSnode **) a))->partitionData.boundingSphere->x;
-    float xb = (*((HPSnode **) b))->partitionData.boundingSphere->x;
-    if (xa > xb) return 1;
-    else if (xa < xb) return -1;
-    return 0;
+
+static void yPositive(const HPMpoint *a, const HPMpoint *b, float *m, float *n){
+    *m = a->y; *n = b->y;
 }
-static int yGreaterThan(const void *a, const void *b){
-    float ya = (*((HPSnode **) a))->partitionData.boundingSphere->y;
-    float yb = (*((HPSnode **) b))->partitionData.boundingSphere->y;
-    if (ya < yb) return 1;
-    else if (ya > yb) return -1;
-    return 0;
+
+static void yNegative(const HPMpoint *a, const HPMpoint *b, float *m, float *n){
+    *m = -a->y; *n = -b->y;
 }
-static int yLessThan(const void *a, const void *b){
-    float ya = (*((HPSnode **) a))->partitionData.boundingSphere->y;
-    float yb = (*((HPSnode **) b))->partitionData.boundingSphere->y;
-    if (ya > yb) return 1;
-    else if (ya < yb) return -1;
-    return 0;
+
+static void zPositive(const HPMpoint *a, const HPMpoint *b, float *m, float *n){
+    *m = a->z; *n = b->z;
 }
-static int zGreaterThan(const void *a, const void *b){
-    float za = (*((HPSnode **) a))->partitionData.boundingSphere->z;
-    float zb = (*((HPSnode **) b))->partitionData.boundingSphere->z;
-    if (za < zb) return 1;
-    else if (za > zb) return -1;
-    return 0;
+
+static void zNegative(const HPMpoint *a, const HPMpoint *b, float *m, float *n){
+    *m = -a->z; *n = -b->z;
 }
-static int zLessThan(const void *a, const void *b){
-    float za = (*((HPSnode **) a))->partitionData.boundingSphere->z;
-    float zb = (*((HPSnode **) b))->partitionData.boundingSphere->z;
-    if (za > zb) return 1;
-    else if (za < zb) return -1;
-    return 0;
-}
+
+static void (*cameraAxis)(const HPMpoint*, const HPMpoint*, float *, float*) = NULL;
 
 static int programSort(const void *a, const void *b){
     HPSpipeline *pa = (*((HPSnode **) a))->pipeline;
@@ -166,24 +94,75 @@ static int programSort(const void *a, const void *b){
     return 0;
 }
 
-static void setSortFuns(Plane *plane, 
-                        int (**alphaSort)(const void*, const void*),
-                        int (**renderSort)(const void*, const void*)){
+int hpsCloserToCamera(const HPMpoint *a, const HPMpoint *b){
+    float m, n;
+    cameraAxis(a, b, &m, &n);
+    if (m < n) return 1;
+    else if (m > n) return -1;
+    return 0;
+}
+
+int hpsFurtherFromCamera(const HPMpoint *a, const HPMpoint *b){
+    float m, n;
+    cameraAxis(a, b, &m, &n);
+    if (m > n) return 1;
+    else if (m < n) return -1;
+    return 0;
+}
+
+int hpsBSCloserToCamera(const BoundingSphere *a, const BoundingSphere *b){
+    float m, n;
+    cameraAxis((HPMpoint *)a, (HPMpoint *)b, &m, &n);
+    float mr = m - a->r;
+    float nr = n - b->r;
+    if (mr < nr) return 1;
+    else if (mr > nr) return -1;
+    return 0;
+}
+
+int hpsBSFurtherFromCamera(const BoundingSphere *a, const BoundingSphere *b){
+    float m, n;
+    cameraAxis((HPMpoint *)a, (HPMpoint *)b, &m, &n);
+    float mr = m - a->r;
+    float nr = n - b->r;
+    if (mr < nr) return 1;
+    else if (mr > nr) return -1;
+    return 0;
+}
+
+static void setCameraAxis(Plane *plane){
     float aa, ab, ac;
     aa = abs(plane->a); 
     ab = abs(plane->b); 
     ac = abs(plane->c); 
 
     if ((aa > ab) && (aa > ac)){
-        if (plane->a < 0.0) { *alphaSort = &xLessThan; *renderSort = &xNegative; } 
-        else                { *alphaSort = &xGreaterThan; *renderSort = &xPositive; }
+        if (plane->a < 0.0) { cameraAxis = &xPositive; } 
+        else                { cameraAxis = &xNegative; }
     } else if ((ab > ac)){
-        if (plane->b < 0.0) { *alphaSort = &yLessThan; *renderSort = &yNegative; } 
-        else                { *alphaSort = &yGreaterThan; *renderSort = &yPositive; }
+        if (plane->b < 0.0) { cameraAxis = &yPositive; } 
+        else                { cameraAxis = &yNegative; }
     } else {
-        if (plane->c < 0.0) { *alphaSort = &zLessThan; *renderSort = &zNegative; } 
-        else                { *alphaSort = &zGreaterThan; *renderSort = &zPositive; }
+        if (plane->c < 0.0) { cameraAxis = &zPositive; } 
+        else                { cameraAxis = &zNegative; }
     }
+}
+
+static int alphaSort(const void *a, const void *b){
+    BoundingSphere *ba = (*((HPSnode **) a))->partitionData.boundingSphere;
+    BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
+
+#ifdef VOLUMETRIC_ALPHA
+    return hpsBSFurtherFromCamera(ba, bb);
+#else
+    return hpsFurtherFromCamera((HPMpoint *) ba, (HPMpoint *) bb);
+#endif
+}
+
+static int renderSort(const void *a, const void *b){
+    BoundingSphere *ba = (*((HPSnode **) a))->partitionData.boundingSphere;
+    BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
+    return hpsBSCloserToCamera(ba, bb);
 }
 
 #ifdef DEBUG
@@ -203,9 +182,6 @@ static void renderQueues(HPScamera *camera){
 #endif 
     int i, j, count;
     struct pipeline *p = NULL;
-    int (*alphaSort)(const void*, const void*) = NULL;
-    int (*renderSort)(const void*, const void*) = NULL;
-    setSortFuns(&camera->planes[NEAR], &alphaSort, &renderSort);
     qsort(renderQueue.data, renderQueue.size, sizeof(void *), &programSort);
     HPSnode **nodes = (HPSnode **) renderQueue.data;
     for (i = 0; i < renderQueue.size;){
@@ -327,6 +303,7 @@ void hpsRenderCamera(HPScamera *camera){
     computePlanes(c);
     camera->scene->partitionInterface->doVisible(c->scene->partitionStruct,
                                                  c->planes, &addToQueue);
+    setCameraAxis(&camera->planes[NEAR]);
     hpsPreRenderExtensions(c->scene);
     renderQueues(c);
     hpsPostRenderExtensions(c->scene);
