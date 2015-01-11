@@ -10,6 +10,8 @@ Hyperscene uses the [Hypermath](https://github.com/AlexCharlton/hypermath) libra
 
 Various debugging statements are printed (in case you’re wondering how many things are being drawn, or what the partitioning system is doing) when `DEBUG` is defined. E.g. `make -DDEBUG`.
 
+Some rendering options are also defined at compile time: `NO_REVERSE_PAINTER` and `VOLUMETRIC_ALPHA`. For an explanation of these options, see `hpsRenderCamera`.
+
 ## Requirements
 None
 
@@ -166,7 +168,11 @@ Delete the given camera.
 
      void hpsRenderCamera(HPScamera *camera);
 
-Render the given camera. When cameras are rendered, all of the visible nodes are sorted: first into groups of nodes that have an alpha pipline or that don’t. Alpha nodes are sorted by decreasing distance from the camera and rendered last. Non-alpha nodes are sorted by pipeline. Each pipeline is then sorted again by increasing distance from the camera before they are rendered. Drawing the things that are closest to the camera first (“reverse painter” sorting) can help graphics hardware determine when later bits of the scene are hidden, thus saving some rendering time. Not all applications will benefit from this extra step, though, and it can be disabled by defining `NO_REVERSE_PAINTER` at compilation time.
+Render the given camera. When cameras are rendered, all of the visible nodes are sorted: first into groups of nodes that have an alpha pipline or that don’t.
+
+Alpha nodes are sorted by decreasing distance from the camera and rendered last. There are two sorting schemes that may be employed. The first, and default, scheme is useful when working with one-dimensional alpha objects. It sorts the distance of nodes based only on their origin, not taking into account their bounding sphere. The second scheme, enabled by defining `VOLUMETRIC_ALPHA`, is useful when working with three-dimensional alpha objects, and sorts distance while taking the bounding sphere into account.
+
+Non-alpha nodes are sorted by pipeline. Each pipeline is then sorted again by increasing distance from the camera before they are rendered. By doing so, the things that are closest to the camera are drawn first (“reverse painter” sorting) which can help graphics hardware determine when later bits of the scene are hidden, thus saving some rendering time. Not all applications will benefit from this extra step, though, and it can be disabled by defining `NO_REVERSE_PAINTER` at compilation time.
 
      void hpsUpdateCamera(HPScamera *camera);
 
