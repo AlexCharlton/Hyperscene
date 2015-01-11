@@ -21,7 +21,7 @@ struct node {
     HPMquat rotation;
     float *transform;
     struct pipeline *pipeline;
-    void *extension;
+    void **extension;
     void (*delete)(void *); //(data)
     void *data;
     bool needsUpdate;
