@@ -97,16 +97,16 @@ static int programSort(const void *a, const void *b){
 int hpsCloserToCamera(const HPMpoint *a, const HPMpoint *b){
     float m, n;
     cameraAxis(a, b, &m, &n);
-    if (m < n) return 1;
-    else if (m > n) return -1;
+    if (m < n) return -1;
+    else if (m > n) return 1;
     return 0;
 }
 
 int hpsFurtherFromCamera(const HPMpoint *a, const HPMpoint *b){
     float m, n;
     cameraAxis(a, b, &m, &n);
-    if (m > n) return 1;
-    else if (m < n) return -1;
+    if (m > n) return -1;
+    else if (m < n) return 1;
     return 0;
 }
 
@@ -115,8 +115,8 @@ int hpsBSCloserToCamera(const BoundingSphere *a, const BoundingSphere *b){
     cameraAxis((HPMpoint *)a, (HPMpoint *)b, &m, &n);
     float mr = m - a->r;
     float nr = n - b->r;
-    if (mr < nr) return 1;
-    else if (mr > nr) return -1;
+    if (mr < nr) return -1;
+    else if (mr > nr) return 1;
     return 0;
 }
 
@@ -125,8 +125,8 @@ int hpsBSFurtherFromCamera(const BoundingSphere *a, const BoundingSphere *b){
     cameraAxis((HPMpoint *)a, (HPMpoint *)b, &m, &n);
     float mr = m - a->r;
     float nr = n - b->r;
-    if (mr < nr) return 1;
-    else if (mr > nr) return -1;
+    if (mr > nr) return -1;
+    else if (mr < nr) return 1;
     return 0;
 }
 
@@ -137,13 +137,13 @@ static void setCameraAxis(Plane *plane){
     ac = abs(plane->c); 
 
     if ((aa > ab) && (aa > ac)){
-        if (plane->a < 0.0) { cameraAxis = &xPositive; } 
+        if (plane->a > 0.0) { cameraAxis = &xPositive; }
         else                { cameraAxis = &xNegative; }
     } else if ((ab > ac)){
-        if (plane->b < 0.0) { cameraAxis = &yPositive; } 
+        if (plane->b > 0.0) { cameraAxis = &yPositive; }
         else                { cameraAxis = &yNegative; }
     } else {
-        if (plane->c < 0.0) { cameraAxis = &zPositive; } 
+        if (plane->c > 0.0) { cameraAxis = &zPositive; }
         else                { cameraAxis = &zNegative; }
     }
 }
