@@ -45,9 +45,7 @@ static void updateNode(HPSnode *node, HPSscene *scene){
         bs->y = 0;
         bs->z = 0;
         hpmMat4VecMult(node->transform, (float*) bs);
-        if (node->pipeline && 
-            (node->pipeline->isAlpha != 1) && 
-            (node->pipeline->isAlpha != 0)){
+        if (node->extension){
             hpsUpdateNodeExtensions(scene, node);
         }
 	scene->partitionInterface->updateNode(&node->partitionData);
@@ -89,6 +87,7 @@ HPSnode *hpsAddNode(HPSnode *parent, void *data,
     node->rotation.w = 1.0;
     node->data = data;
     node->pipeline = pipeline;
+    node->extension = NULL;
     node->parent = parent;
     node->delete = deleteFunc;
     node->needsUpdate = true;
@@ -235,9 +234,16 @@ void hpsDeletePipeline(HPSpipeline *pipeline){
 }
 
 /* Extensions */
-// Add a node with the extension as the pipeline to have it passed to visibleNode when rendering
+void hpsSetNodeExtension(HPSnode *node, HPSextension *extension){
+    node->extension = extension;
+}
 
 void hpsActivateExtension(HPSscene *scene, HPSextension *extension){
+    int i;
+    for (i = 0; i < scene->extensions.size; i += 2){
+        HPSextension *e = (HPSextension *) scene->extensions.data[i];
+        if (e == extension) return;
+    }
     hpsPush(&scene->extensions, (void *) extension);
     hpsPush(&scene->extensions, NULL);
     extension->init(&scene->extensions.data[scene->extensions.size-1]);
@@ -272,8 +278,9 @@ void hpsVisibleNodeExtensions(HPSscene *scene, HPSnode *node){
     int i;
     for (i = 0; i < scene->extensions.size; i += 2){
         HPSextension *e = (HPSextension *) scene->extensions.data[i];
-        if ((void*) node->pipeline == (void*) e)
+        if ((void*) node->extension == (void*) e){
             e->visibleNode(scene->extensions.data[i+1], node);
+        }
     }
 }
 
@@ -281,8 +288,10 @@ void hpsUpdateNodeExtensions(HPSscene *scene, HPSnode *node){
     int i;
     for (i = 0; i < scene->extensions.size; i += 2){
         HPSextension *e = (HPSextension *) scene->extensions.data[i];
-        if ((void*) node->pipeline == (void*) e)
+        if ((void*) node->extension == (void*) e){
             e->updateNode(scene->extensions.data[i+1], node);
+            return;
+        }
     }
 }
 

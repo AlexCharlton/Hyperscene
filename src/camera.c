@@ -34,13 +34,15 @@ void hpsSetWindowSizeFun(HPSwindowSizeFun fun){ windowSizefun = fun; }
 
 static void addToQueue(Node *node){
     HPSnode *n = (HPSnode *) node->data;
-    if (!n->pipeline) return;
-    if (n->pipeline->isAlpha == 1){
-	hpsPush(&alphaQueue, n);
-    } else if (n->pipeline->isAlpha == 0) {
-	hpsPush(&renderQueue, n);
-    } else {
-        hpsVisibleNodeExtensions(currentCamera.scene, node->data);
+    if (n->pipeline){
+        if (n->pipeline->isAlpha){
+            hpsPush(&alphaQueue, n);
+        } else {
+            hpsPush(&renderQueue, n);
+        }
+    }
+    if (n->extension){
+        hpsVisibleNodeExtensions(currentCamera.scene, n);
     }
 }
 

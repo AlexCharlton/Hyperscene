@@ -9,9 +9,8 @@ typedef enum {
 } HPScameraType;
 
 typedef enum {
-    POSITION, LOOK_AT, ORBIT, FIRST_PERSON
+    POSITION, LOOK_AT, ORBIT, FIRST_PERSON // TODO prefix
 } HPScameraStyle;
-
 
 typedef struct node HPSnode;
 typedef struct scene HPSscene;
@@ -165,3 +164,4 @@ void hpsActivateExtension(HPSscene *scene, HPSextension *extension);
 
 void *hpsExtensionData(HPSscene *scene, HPSextension *extension);
 
+void hpsSetNodeExtension(HPSnode *node, HPSextension *extension);

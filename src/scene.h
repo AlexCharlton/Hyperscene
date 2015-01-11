@@ -6,7 +6,7 @@
 typedef void (*cameraUpdateFun)(int, int, HPScamera*);
 
 struct pipeline {
-    long isAlpha; // A boolean value expressed as a long so that pipeline can't be mixed up with an extension
+    bool isAlpha;
     void (*preRender)(void *);
     void (*render)(void *);
     void (*postRender)();
@@ -21,6 +21,7 @@ struct node {
     HPMquat rotation;
     float *transform;
     struct pipeline *pipeline;
+    HPSextension *extension;
     void (*delete)(void *); //(data)
     void *data;
     bool needsUpdate;
