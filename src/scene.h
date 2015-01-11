@@ -21,7 +21,7 @@ struct node {
     HPMquat rotation;
     float *transform;
     struct pipeline *pipeline;
-    HPSextension *extension;
+    void *extension;
     void (*delete)(void *); //(data)
     void *data;
     bool needsUpdate;
@@ -56,6 +56,6 @@ void hpsSetWindowSizeFun(HPSwindowSizeFun fun);
 /* Extensions */
 void hpsPreRenderExtensions(HPSscene *scene);
 void hpsPostRenderExtensions(HPSscene *scene);
-void hpsVisibleNodeExtensions(HPSscene *scene, HPSnode *node);
-void hpsUpdateNodeExtensions(HPSscene *scene, HPSnode *node);
 void hpsDeleteExtensions(HPSscene *scene);
+void hpsVisibleExtensionNode(HPSnode *node);
+void hpsUpdateExtensionNode(HPSnode *node);

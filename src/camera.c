@@ -42,7 +42,7 @@ static void addToQueue(Node *node){
         }
     }
     if (n->extension){
-        hpsVisibleNodeExtensions(currentCamera.scene, n);
+        hpsVisibleExtensionNode(n);
     }
 }
 
