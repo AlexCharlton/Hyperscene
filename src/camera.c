@@ -285,7 +285,7 @@ void hpsUpdateCamera(HPScamera *camera){
     HPScamera *c = camera;
     float cameraMat[16];
     switch (camera->style){
-    case ORBIT:
+    case HPS_ORBIT:
     {
         float cosPitch = cos(c->rotation.y);
         float sinPitch = sin(c->rotation.y);
@@ -299,16 +299,16 @@ void hpsUpdateCamera(HPScamera *camera){
         hpmCameraInverse(cameraMat, c->view);
         break;
     }
-    case LOOK_AT:
+    case HPS_LOOK_AT:
         hpmLookAt((float *) &c->position, (float *) &c->object, (float *) &c->up, 
                   c->view);
         break;
-    case POSITION:
+    case HPS_POSITION:
         hpmQuaternionRotation((float *) &c->rotation, cameraMat);
         hpmTranslate((float *) &c->position, cameraMat);
         hpmCameraInverse(cameraMat, c->view);
         break;
-    case FIRST_PERSON:
+    case HPS_FIRST_PERSON:
         hpmYPRRotation(-c->rotation.x, c->rotation.y, c->rotation.z, cameraMat);
         hpmTranslate((float *) &c->position, cameraMat);
         hpmCameraInverse(cameraMat, c->view);
@@ -396,8 +396,8 @@ void hpsDeleteCamera(HPScamera *camera){
 }
 
 void hpsMoveCamera(HPScamera *camera, float *vec){
-    if (camera->style == ORBIT){
-        fprintf(stderr, "Can't move an orbit camera\n");
+    if (camera->style == HPS_ORBIT){
+        fprintf(stderr, "Can't move an HPS_ORBIT camera\n");
         return;
     }
     camera->position.x += vec[0];
@@ -406,8 +406,8 @@ void hpsMoveCamera(HPScamera *camera, float *vec){
 }
 
 void hpsSetCameraPosition(HPScamera *camera, float *vec){
-    if (camera->style == ORBIT){
-        fprintf(stderr, "Can't move an ORBIT camera\n");
+    if (camera->style == HPS_ORBIT){
+        fprintf(stderr, "Can't move an HPS_ORBIT camera\n");
         return;
     }
     camera->position.x = vec[0];
@@ -420,16 +420,16 @@ float *hpsCameraPosition(HPScamera *camera){
 }
 
 float *hpsCameraRotation(HPScamera *camera){
-    if (camera->style != POSITION){
-        fprintf(stderr, "Can't rotation a non POSITION camera\n");
+    if (camera->style != HPS_POSITION){
+        fprintf(stderr, "Can't rotation a non HPS_POSITION camera\n");
         return NULL;
     }
     return (float *) &camera->rotation;
 }
 
 void hpsSetCameraUp(HPScamera *camera, float *up){
-    if (camera->style != LOOK_AT){
-        fprintf(stderr, "Can't set up on a non LOOK_AT camera\n");
+    if (camera->style != HPS_LOOK_AT){
+        fprintf(stderr, "Can't set up on a non HPS_LOOK_AT camera\n");
         return;
     }
     camera->up.x = up[0];
@@ -438,8 +438,8 @@ void hpsSetCameraUp(HPScamera *camera, float *up){
 }
 
 void hpsCameraLookAt(HPScamera *camera, float *p){
-    if ((camera->style != ORBIT) && (camera->style != LOOK_AT)) {
-        fprintf(stderr, "Can't set object to look at for a non LOOK_AT or ORBIT camera\n");
+    if ((camera->style != HPS_ORBIT) && (camera->style != HPS_LOOK_AT)) {
+        fprintf(stderr, "Can't set object to look at for a non HPS_LOOK_AT or HPS_ORBIT camera\n");
         return;
     }
     camera->object.x = p[0];
@@ -448,25 +448,25 @@ void hpsCameraLookAt(HPScamera *camera, float *p){
 }
 
 void hpsYawCamera(HPScamera *camera, float angle){
-    if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't yaw a non ORBIT or FIRST_PERSON camera\n");
+    if ((camera->style != HPS_ORBIT) && (camera->style != HPS_FIRST_PERSON)) {
+        fprintf(stderr, "Can't yaw a non HPS_ORBIT or HPS_FIRST_PERSON camera\n");
         return;
     }
     camera->rotation.x += angle;
 }
 
 void hpsSetCameraYaw(HPScamera *camera, float angle){
-    if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't yaw a non ORBIT or FIRST_PERSON camera\n");
+    if ((camera->style != HPS_ORBIT) && (camera->style != HPS_FIRST_PERSON)) {
+        fprintf(stderr, "Can't yaw a non HPS_ORBIT or HPS_FIRST_PERSON camera\n");
         return;
     }
-    camera->style = ORBIT;
+    camera->style = HPS_ORBIT;
     camera->rotation.x = angle;
 }
 
 void hpsPitchCamera(HPScamera *camera, float angle){
-    if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't pitch a non ORBIT or FIRST_PERSON camera\n");
+    if ((camera->style != HPS_ORBIT) && (camera->style != HPS_FIRST_PERSON)) {
+        fprintf(stderr, "Can't pitch a non HPS_ORBIT or HPS_FIRST_PERSON camera\n");
         return;
     }
     camera->rotation.y += angle;
@@ -474,16 +474,16 @@ void hpsPitchCamera(HPScamera *camera, float angle){
 }
 
 void hpsSetCameraPitch(HPScamera *camera, float angle){
-    if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't pitch a non ORBIT or FIRST_PERSON camera\n");
+    if ((camera->style != HPS_ORBIT) && (camera->style != HPS_FIRST_PERSON)) {
+        fprintf(stderr, "Can't pitch a non HPS_ORBIT or HPS_FIRST_PERSON camera\n");
         return;
     }
     camera->rotation.y = fmin(HALF_PI, fmax(-HALF_PI, angle));
 }
 
 void hpsZoomCamera(HPScamera *camera, float distance){
-    if (camera->style != ORBIT){
-        fprintf(stderr, "Can't zoom a non ORBIT camera\n");
+    if (camera->style != HPS_ORBIT){
+        fprintf(stderr, "Can't zoom a non HPS_ORBIT camera\n");
         return;
     }
     camera->rotation.w += distance;
@@ -491,24 +491,24 @@ void hpsZoomCamera(HPScamera *camera, float distance){
 }
 
 void hpsSetCameraZoom(HPScamera *camera, float distance){
-    if (camera->style != ORBIT){
-        fprintf(stderr, "Can't zoom a non ORBIT camera\n");
+    if (camera->style != HPS_ORBIT){
+        fprintf(stderr, "Can't zoom a non HPS_ORBIT camera\n");
         return;
     }
     camera->rotation.w = (distance < 0.0) ? 0.0 : distance;
 }
 
 void hpsRollCamera(HPScamera *camera, float angle){
-    if ((camera->style != ORBIT) && (camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't roll a non ORBIT or FIRST_PERSON camera\n");
+    if ((camera->style != HPS_ORBIT) && (camera->style != HPS_FIRST_PERSON)) {
+        fprintf(stderr, "Can't roll a non HPS_ORBIT or HPS_FIRST_PERSON camera\n");
         return;
     }
     camera->rotation.z += angle;
 }
 
 void hpsSetCameraRoll(HPScamera *camera, float angle){
-    if ((camera->style != ORBIT) && (camera->style != LOOK_AT)) {
-        fprintf(stderr, "Can't roll a non ORBIT or LOOK_AT camera\n");
+    if ((camera->style != HPS_ORBIT) && (camera->style != HPS_LOOK_AT)) {
+        fprintf(stderr, "Can't roll a non HPS_ORBIT or HPS_LOOK_AT camera\n");
         return;
     }
     camera->rotation.z = angle;
@@ -524,8 +524,8 @@ void hpsResizeCameras(){
 }
 
 void hpsMoveCameraForward(HPScamera *camera, float dist){
-    if ((camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't move a non FIRST_PERSON camera forward\n");
+    if ((camera->style != HPS_FIRST_PERSON)) {
+        fprintf(stderr, "Can't move a non HPS_FIRST_PERSON camera forward\n");
         return;
     }
     float sinYaw = sin(camera->rotation.x);
@@ -535,16 +535,16 @@ void hpsMoveCameraForward(HPScamera *camera, float dist){
 }
 
 void hpsMoveCameraUp(HPScamera *camera, float dist){
-    if ((camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't move a non FIRST_PERSON camera up\n");
+    if ((camera->style != HPS_FIRST_PERSON)) {
+        fprintf(stderr, "Can't move a non HPS_FIRST_PERSON camera up\n");
         return;
     }
     camera->position.y += dist;
 }
 
 void hpsStrafeCamera(HPScamera *camera, float dist){
-    if ((camera->style != FIRST_PERSON)) {
-        fprintf(stderr, "Can't strafe a non FIRST_PERSON camera\n");
+    if ((camera->style != HPS_FIRST_PERSON)) {
+        fprintf(stderr, "Can't strafe a non HPS_FIRST_PERSON camera\n");
         return;
     }
     float sinYaw = sin(camera->rotation.x);

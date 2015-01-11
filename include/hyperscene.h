@@ -9,7 +9,7 @@ typedef enum {
 } HPScameraType;
 
 typedef enum {
-    POSITION, LOOK_AT, ORBIT, FIRST_PERSON // TODO prefix
+    HPS_POSITION, HPS_LOOK_AT, HPS_ORBIT, HPS_FIRST_PERSON
 } HPScameraStyle;
 
 typedef struct node HPSnode;
