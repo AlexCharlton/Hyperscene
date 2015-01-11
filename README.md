@@ -73,7 +73,7 @@ The following functions are used create, delete, and work with nodes:
                          HPSpipeline *pipeline,
                          void (*deleteFunc)(void *));
 
-Create a new node with the given parent. `parent` can either be a scene or another node. `data` is a user supplied pointer to some data which is then passed to the `pipeline` functions as well as `deleteFunc` when the node is deleted.
+Create a new node with the given parent. `parent` can either be a scene or another node. `data` is a user supplied pointer to some data which is then passed to the `pipeline` functions as well as `deleteFunc` when the node is deleted. If `pipeline` is `NULL`, the node will be invisible. `deleteFunc` may also be `NULL`.
 
      void hpsDeleteNode(HPSnode *node);
 
@@ -333,7 +333,7 @@ If you wish to write a new partition interface, create a `partitionIterface` str
 ### Extensions
 Hyperscene features an extension system, so that the rendering of a scene can be augmented in new and exciting ways.
 
-Extensions can add special nodes to scenes. If node is created that is given a pointer to an extension in place of a pipeline, that node will not be rendered but will instead be handled by its extension during rendering and updating.
+Extensions can add special nodes to scenes. `hpsSetNodeExtension` is used to associate a node with an extension, so that it can trigger special actions. This node may be invisible if it was initialized with a null pipeline.
 
      void hpsActivateExtension(HPSscene *scene, HPSextension *extension);
 
@@ -342,6 +342,10 @@ Before an extension can be used in a given scene, it must be activated.
      void *hpsExtensionData(HPSscene *scene, HPSextension *extension);
 
 Each scene stores a pointer that corresponds to the data of a given extension. This function will return it.
+
+    void hpsSetNodeExtension(HPSnode *node, HPSextension *extension);
+
+Set the extension that the node is associated with.
 
 #### Lights
 Hyperscene supplies an extension that provides a generic lighting system:
