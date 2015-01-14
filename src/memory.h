@@ -25,6 +25,8 @@ typedef void* HPSpool;
 /* Pools */
 HPSpool hpsMakePool(size_t blockSize, size_t nBlocks, char name[32]);
 
+void hpsInitPool(HPSpool pool, void *data, size_t blockSize, size_t nBlocks, char name[32]);
+
 void hpsDeletePool(HPSpool pool);
 
 void hpsClearPool(HPSpool pool);
