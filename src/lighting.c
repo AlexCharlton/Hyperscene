@@ -22,12 +22,12 @@ typedef struct {
     Point worldDirection;
     float spotAngle;
     float intensity;
-    HPSpool *pool;
+    HPSpool pool;
 } Light;
 
 typedef struct {
     Color ambient;
-    HPSpool *lightPool;
+    HPSpool lightPool;
 } SceneLighting;
 
 unsigned int hpsMaxLights = 8;
@@ -57,6 +57,7 @@ void hpsInitLighting(void **data){
 void hpsDeleteLighting(void *data){
     SceneLighting *sLighting = (SceneLighting *) data;
     hpsDeletePool(sLighting->lightPool);
+    free(data);
 }
 
 // TODO: Cache lights?
