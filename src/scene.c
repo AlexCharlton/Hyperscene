@@ -293,6 +293,10 @@ void hpsDeleteExtensions(HPSscene *scene){
     }
 }
 
+void *hpsNodeExtensionData(HPSnode *node){
+    return node->extension[1];
+}
+
 void hpsVisibleExtensionNode(HPSnode *node){
     HPSextension *e = (HPSextension *) node->extension[0];
     e->visibleNode(node->extension[1], node);

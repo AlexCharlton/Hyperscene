@@ -164,4 +164,5 @@ void hpsActivateExtension(HPSscene *scene, HPSextension *extension);
 
 void *hpsExtensionData(HPSscene *scene, HPSextension *extension);
 
+void *hpsNodeExtensionData(HPSnode *node);
 void hpsSetNodeExtension(HPSnode *node, HPSextension *extension);
