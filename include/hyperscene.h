@@ -165,4 +165,14 @@ void hpsActivateExtension(HPSscene *scene, HPSextension *extension);
 void *hpsExtensionData(HPSscene *scene, HPSextension *extension);
 
 void *hpsNodeExtensionData(HPSnode *node);
+
 void hpsSetNodeExtension(HPSnode *node, HPSextension *extension);
+
+/* Sorting */
+int hpsCloserToCamera(const HPScamera *camera, const float *a, const float *b);
+
+int hpsFurtherFromCamera(const HPScamera *camera, const float *a, const float *b);
+
+int hpsBSCloserToCamera(const HPScamera *camera, const float *a, const float *b);
+
+int hpsBSFurtherFromCamera(const HPScamera *camera, const float *a, const float *b);

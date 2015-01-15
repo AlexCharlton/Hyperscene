@@ -84,8 +84,6 @@ static void zNegative(const HPMpoint *a, const HPMpoint *b, float *m, float *n){
     *m = -a->z; *n = -b->z;
 }
 
-static void (*cameraAxis)(const HPMpoint*, const HPMpoint*, float *, float*) = NULL;
-
 static int programSort(const void *a, const void *b){
     HPSpipeline *pa = (*((HPSnode **) a))->pipeline;
     HPSpipeline *pb = (*((HPSnode **) b))->pipeline;
@@ -94,57 +92,58 @@ static int programSort(const void *a, const void *b){
     return 0;
 }
 
-int hpsCloserToCamera(const HPMpoint *a, const HPMpoint *b){
+int hpsCloserToCamera(const HPScamera *camera, const float *a, const float *b){
     float m, n;
-    cameraAxis(a, b, &m, &n);
+    camera->sort((HPMpoint *) a, (HPMpoint *) b, &m, &n);
     if (m < n) return -1;
     else if (m > n) return 1;
     return 0;
 }
 
-int hpsFurtherFromCamera(const HPMpoint *a, const HPMpoint *b){
+int hpsFurtherFromCamera(const HPScamera *camera, const float *a, const float *b){
     float m, n;
-    cameraAxis(a, b, &m, &n);
+    camera->sort((HPMpoint *) a, (HPMpoint *) b, &m, &n);
     if (m > n) return -1;
     else if (m < n) return 1;
     return 0;
 }
 
-int hpsBSCloserToCamera(const BoundingSphere *a, const BoundingSphere *b){
+int hpsBSCloserToCamera(const HPScamera *camera, const float *a, const float *b){
     float m, n;
-    cameraAxis((HPMpoint *)a, (HPMpoint *)b, &m, &n);
-    float mr = m - a->r;
-    float nr = n - b->r;
+    camera->sort((HPMpoint *) a, (HPMpoint *) b, &m, &n);
+    float mr = m - ((BoundingSphere *) a)->r;
+    float nr = n - ((BoundingSphere *) b)->r;
     if (mr < nr) return -1;
     else if (mr > nr) return 1;
     return 0;
 }
 
-int hpsBSFurtherFromCamera(const BoundingSphere *a, const BoundingSphere *b){
+int hpsBSFurtherFromCamera(const HPScamera *camera, const float *a, const float *b){
     float m, n;
-    cameraAxis((HPMpoint *)a, (HPMpoint *)b, &m, &n);
-    float mr = m - a->r;
-    float nr = n - b->r;
+    camera->sort((HPMpoint *) a, (HPMpoint *) b, &m, &n);
+    float mr = m - ((BoundingSphere *) a)->r;
+    float nr = n - ((BoundingSphere *) b)->r;
     if (mr > nr) return -1;
     else if (mr < nr) return 1;
     return 0;
 }
 
-static void setCameraAxis(Plane *plane){
+static void setCameraSort(HPScamera *camera){
+    Plane *plane = &camera->planes[NEAR];
     float aa, ab, ac;
     aa = abs(plane->a); 
     ab = abs(plane->b); 
     ac = abs(plane->c); 
 
     if ((aa > ab) && (aa > ac)){
-        if (plane->a > 0.0) { cameraAxis = &xPositive; }
-        else                { cameraAxis = &xNegative; }
+        if (plane->a > 0.0) { camera->sort = &xPositive; }
+        else                { camera->sort = &xNegative; }
     } else if ((ab > ac)){
-        if (plane->b > 0.0) { cameraAxis = &yPositive; }
-        else                { cameraAxis = &yNegative; }
+        if (plane->b > 0.0) { camera->sort = &yPositive; }
+        else                { camera->sort = &yNegative; }
     } else {
-        if (plane->c > 0.0) { cameraAxis = &zPositive; }
-        else                { cameraAxis = &zNegative; }
+        if (plane->c > 0.0) { camera->sort = &zPositive; }
+        else                { camera->sort = &zNegative; }
     }
 }
 
@@ -153,16 +152,16 @@ static int alphaSort(const void *a, const void *b){
     BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
 
 #ifdef VOLUMETRIC_ALPHA
-    return hpsBSFurtherFromCamera(ba, bb);
+    return hpsBSFurtherFromCamera(&currentCamera, ba, bb);
 #else
-    return hpsFurtherFromCamera((HPMpoint *) ba, (HPMpoint *) bb);
+    return hpsFurtherFromCamera(&currentCamera, (float *) ba, (float *) bb);
 #endif
 }
 
 static int renderSort(const void *a, const void *b){
     BoundingSphere *ba = (*((HPSnode **) a))->partitionData.boundingSphere;
     BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
-    return hpsBSCloserToCamera(ba, bb);
+    return hpsBSCloserToCamera(&currentCamera, (float *) ba, (float *) bb);
 }
 
 #ifdef DEBUG
@@ -301,9 +300,9 @@ void hpsRenderCamera(HPScamera *camera){
     HPScamera *c = &currentCamera;
     clearQueues();
     computePlanes(c);
-    camera->scene->partitionInterface->doVisible(c->scene->partitionStruct,
-                                                 c->planes, &addToQueue);
-    setCameraAxis(&camera->planes[NEAR]);
+    c->scene->partitionInterface->doVisible(c->scene->partitionStruct,
+                                            c->planes, &addToQueue);
+    setCameraSort(c);
     hpsPreRenderExtensions(c->scene);
     renderQueues(c);
     hpsPostRenderExtensions(c->scene);

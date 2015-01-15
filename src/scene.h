@@ -48,6 +48,7 @@ struct camera {
     float modelViewProjection[16];
     Plane planes[6];
     cameraUpdateFun update;
+    void (*sort)(const HPMpoint*, const HPMpoint*, float *, float*); // used to sort points based on camera positioning
 };
 
 void hpsInitCameras();
