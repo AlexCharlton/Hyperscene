@@ -1,6 +1,6 @@
 # Variables
 TARGET = libhyperscene.so
-SOURCES = hypermath.c vector.c pools.c aabb-tree.c camera.c scene.c lighting.c particles.c
+SOURCES = hypermath.c vector.c pools.c aabb-tree.c camera.c scene.c lighting.c
 
 local_CFLAGS += -O3 -Wall -Iinclude/ -Ihypermath/include/
 
