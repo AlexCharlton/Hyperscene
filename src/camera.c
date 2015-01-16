@@ -18,6 +18,8 @@ static HPSwindowSizeFun windowSizefun;
 static HPScamera currentCamera;
 static float currentInverseTransposeModel[16];
 
+HPScamera *hpsCurrentCamera(){ return &currentCamera; }
+
 float *hpsCurrentCameraPosition = (float *) &currentCamera.position;
 
 float *hpsCurrentCameraProjection = currentCamera.projection;

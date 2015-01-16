@@ -79,6 +79,7 @@ HPSpipeline *hpsAddPipeline(void (*preRender)(void *),
 void hpsDeletePipeline(HPSpipeline *pipeline);
 
 /* Cameras */
+HPScamera *hpsCurrentCamera();
 
 extern float *hpsCurrentInverseTransposeModel;
 
