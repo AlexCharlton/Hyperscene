@@ -20,17 +20,29 @@ static float currentInverseTransposeModel[16];
 
 HPScamera *hpsCurrentCamera(){ return &currentCamera; }
 
-float *hpsCurrentCameraPosition = (float *) &currentCamera.position;
+float *hpsCurrentCameraPosition(){
+    return (float *) &currentCamera.position;
+}
 
-float *hpsCurrentCameraProjection = currentCamera.projection;
+float *hpsCurrentCameraProjection(){
+    return currentCamera.projection;
+}
 
-float *hpsCurrentCameraView = currentCamera.view;
+float *hpsCurrentCameraView(){
+    return currentCamera.view;
+}
 
-float *hpsCurrentCameraViewProjection = currentCamera.viewProjection;
+float *hpsCurrentCameraViewProjection(){
+    return currentCamera.viewProjection;
+}
 
-float *hpsCurrentCameraModelViewProjection = currentCamera.modelViewProjection;
+float *hpsCurrentCameraModelViewProjection(){
+    return currentCamera.modelViewProjection;
+}
 
-float *hpsCurrentInverseTransposeModel = currentInverseTransposeModel;
+float *hpsCurrentInverseTransposeModel(){
+    return currentInverseTransposeModel;
+}
 
 void hpsSetWindowSizeFun(HPSwindowSizeFun fun){ windowSizefun = fun; }
 
