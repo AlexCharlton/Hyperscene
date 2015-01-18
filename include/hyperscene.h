@@ -174,6 +174,10 @@ int hpsCloserToCamera(const HPScamera *camera, const float *a, const float *b);
 
 int hpsFurtherFromCamera(const HPScamera *camera, const float *a, const float *b);
 
+int hpsFurtherFromCameraRough(const HPScamera *camera, const float *a, const float *b);
+
 int hpsBSCloserToCamera(const HPScamera *camera, const float *a, const float *b);
 
 int hpsBSFurtherFromCamera(const HPScamera *camera, const float *a, const float *b);
+
+int hpsBSFurtherFromCameraRough(const HPScamera *camera, const float *a, const float *b);

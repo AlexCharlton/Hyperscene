@@ -114,9 +114,25 @@ int hpsCloserToCamera(const HPScamera *camera, const float *a, const float *b){
     return 0;
 }
 
-int hpsFurtherFromCamera(const HPScamera *camera, const float *a, const float *b){
+int hpsFurtherFromCameraRough(const HPScamera *camera, const float *a, const float *b){
     float m, n;
     camera->sort((HPMpoint *) a, (HPMpoint *) b, &m, &n);
+    if (m > n) return -1;
+    else if (m < n) return 1;
+    return 0;
+}
+
+int hpsFurtherFromCamera(const HPScamera *camera, const float *a, const float *b){
+    float m, n, mx, my, mz, nx, ny, nz;
+    HPMpoint c = camera->position;
+    mx = a[0] - c.x;
+    my = a[1] - c.y;
+    mz = a[2] - c.z;
+    m =  mx*mx + my*my + mz*mz;
+    nx = b[0] - c.x;
+    ny = b[1] - c.y;
+    nz = b[2] - c.z;
+    n =  nx*nx + ny*ny + nz*nz;
     if (m > n) return -1;
     else if (m < n) return 1;
     return 0;
@@ -125,20 +141,38 @@ int hpsFurtherFromCamera(const HPScamera *camera, const float *a, const float *b
 int hpsBSCloserToCamera(const HPScamera *camera, const float *a, const float *b){
     float m, n;
     camera->sort((HPMpoint *) a, (HPMpoint *) b, &m, &n);
-    float mr = m - ((BoundingSphere *) a)->r;
-    float nr = n - ((BoundingSphere *) b)->r;
+    float mr = m - a[3];
+    float nr = n - b[3];
     if (mr < nr) return -1;
     else if (mr > nr) return 1;
     return 0;
 }
 
-int hpsBSFurtherFromCamera(const HPScamera *camera, const float *a, const float *b){
+int hpsBSFurtherFromCameraRough(const HPScamera *camera, const float *a, const float *b){
     float m, n;
     camera->sort((HPMpoint *) a, (HPMpoint *) b, &m, &n);
-    float mr = m - ((BoundingSphere *) a)->r;
-    float nr = n - ((BoundingSphere *) b)->r;
+    float mr = m - a[3];
+    float nr = n - b[3];
     if (mr > nr) return -1;
     else if (mr < nr) return 1;
+    return 0;
+}
+
+int hpsBSFurtherFromCamera(const HPScamera *camera, const float *a, const float *b){
+    float m, n, mx, my, mz, nx, ny, nz, mr, nr;
+    HPMpoint c = camera->position;
+    mr = a[3];
+    nr = b[3];
+    mx = a[0] - c.x - mr;
+    my = a[1] - c.y - mr;
+    mz = a[2] - c.z - mr;
+    m =  mx*mx + my*my + mz*mz;
+    nx = b[0] - c.x - nr;
+    ny = b[1] - c.y - nr;
+    nz = b[2] - c.z - nr;
+    n =  nx*nx + ny*ny + nz*nz;
+    if (m > n) return -1;
+    else if (m < n) return 1;
     return 0;
 }
 
@@ -165,11 +199,23 @@ static int alphaSort(const void *a, const void *b){
     BoundingSphere *ba = (*((HPSnode **) a))->partitionData.boundingSphere;
     BoundingSphere *bb = (*((HPSnode **) b))->partitionData.boundingSphere;
 
+#ifdef ROUGH_ALPHA
+
+#ifdef VOLUMETRIC_ALPHA
+    return hpsBSFurtherFromCameraRough(&currentCamera, ba, bb);
+#else
+    return hpsFurtherFromCameraRough(&currentCamera, (float *) ba, (float *) bb);
+#endif
+
+#else // not ROUGH_ALPHA
+
 #ifdef VOLUMETRIC_ALPHA
     return hpsBSFurtherFromCamera(&currentCamera, ba, bb);
 #else
     return hpsFurtherFromCamera(&currentCamera, (float *) ba, (float *) bb);
 #endif
+
+#endif // ROUGH_ALPHA
 }
 
 static int renderSort(const void *a, const void *b){
