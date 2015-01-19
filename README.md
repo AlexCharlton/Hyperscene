@@ -196,7 +196,7 @@ Update all the active cameras.
 
      void hpsResizeCameras();
 
-Modify the projection matrix of all cameras, based on the window dimensions supplied by the `windowSizeFun` that was passed to `init`. Should be called whenever the window is resized.
+Modify the projection matrix of all cameras, based on the viewport dimensions supplied by the `windowSizeFun` that was passed to `init`. Should be called whenever the window is resized. The viewport dimensions of a camera are scaled by any values passed to `hpsSetCameraViewportRatio`. If `hpsSetCameraViewportDimensions` has been called on a camera, this function has no effect on it.
 
      void hpsSetCameraClipPlanes(HPScamera *camera, float near, float far);
 
@@ -205,6 +205,14 @@ Set the near and far clip planes of the camera. Nodes closer to or further away 
      void hpsSetCameraViewAngle(HPScamera *camera, float angle);
 
 Set the viewing angle of the perspective camera to `angle` degrees. Defaults to `70`. This doesn’t have any effect on orthographic cameras.
+
+    void hpsSetCameraViewportRatio(HPScamera *camera, float width, float height);
+
+This scales the camera’s viewport in the width and height direction. The effects of the scaling persist after `hpsResizeCameras` is called.
+
+    void hpsSetCameraViewportDimensions(HPScamera *camera, int width, int height);
+
+This sets the camera’s viewport dimensions to the given width and height, and fixes these dimensions such that they will not be changed when `hpsResizeCameras` is called.
 
 #### Movement and rotation
      void hpsMoveCamera(HPScamera *camera, float *vec);
