@@ -105,7 +105,7 @@ void hpsSetCameraViewAngle(HPScamera *camera, float angle);
 
 void hpsSetCameraViewportRatio(HPScamera *camera, float width, float height);
 
-void hpsSetCameraViewportDimensions(HPScamera *camera, int w, int h);
+void hpsSetCameraViewportDimensions(HPScamera *camera, int width, int height);
 
 void hpsDeleteCamera(HPScamera *camera);
 
