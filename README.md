@@ -500,6 +500,9 @@ All of these function pointers *must* be set. `NULL` pointers will be dereferenc
 
 
 ## Version history
+### Version 0.4.0
+* More control over camera viewport size
+
 ### Version 0.3.0
 * Improve distance-to-camera filtering
 * Prefix camera style enum elements
