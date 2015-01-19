@@ -103,6 +103,10 @@ void hpsSetCameraClipPlanes(HPScamera *camera, float near, float far);
 
 void hpsSetCameraViewAngle(HPScamera *camera, float angle);
 
+void hpsSetCameraViewportRatio(HPScamera *camera, float width, float height);
+
+void hpsSetCameraViewportDimensions(HPScamera *camera, int w, int h);
+
 void hpsDeleteCamera(HPScamera *camera);
 
 void hpsMoveCamera(HPScamera *camera, float *vec);

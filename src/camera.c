@@ -6,8 +6,6 @@
 #include "scene.h"
 #define HALF_PI 1.57079631
 
-// TODO cameras render to different viewport areas
-
 typedef enum {
     RIGHT, LEFT, TOP, BOTTOM, NEAR, FAR
 } Faces;
@@ -370,10 +368,14 @@ void hpsRenderCamera(HPScamera *camera){
 }
 
 static void hpsOrthoCamera(int width, int height, HPScamera *camera){
+    width *= camera->viewportW;
+    height *= camera->viewportH;
     hpmOrtho(width, height, camera->n, camera->f, camera->projection);
 }
 
 static void hpsPerspectiveCamera(int width, int height, HPScamera *camera){
+    width *= camera->viewportW;
+    height *= camera->viewportH;
     hpmPerspective(width, height, camera->n, camera->f, camera->viewAngle,
 		   camera->projection);
 }
@@ -396,6 +398,9 @@ HPScamera *hpsMakeCamera(HPScameraType type, HPScameraStyle style, HPSscene *sce
     camera->rotation.y = 0;
     camera->rotation.z = 0;
     camera->rotation.w = 1;
+    camera->viewportW = 1.0;
+    camera->viewportH = 1.0;
+    camera->viewportIsStatic = false;
     if (type == HPS_ORTHO)
         camera->update = &hpsOrthoCamera;
     else
@@ -422,6 +427,18 @@ void hpsSetCameraViewAngle(HPScamera *camera, float angle){
     camera->viewAngle = angle;
     int w, h;
     windowSizefun(&w, &h);
+    camera->update(w, h, camera);
+}
+
+void hpsSetCameraViewportRatio(HPScamera *camera, float width, float height){
+    camera->viewportW = width;
+    camera->viewportH = height;
+    int w, h;
+    windowSizefun(&w, &h);
+    camera->update(w, h, camera);
+}
+void hpsSetCameraViewportDimensions(HPScamera *camera, int w, int h){
+    camera->viewportIsStatic = true;
     camera->update(w, h, camera);
 }
 
@@ -555,7 +572,8 @@ void hpsResizeCameras(){
     windowSizefun(&w, &h);
     for (i = 0; i < cameraList.size; i++){
 	HPScamera *camera = (HPScamera *) cameraList.data[i];
-	camera->update(w, h, camera);
+        if (!camera->viewportIsStatic)
+            camera->update(w, h, camera);
     }
 }
 

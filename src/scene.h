@@ -40,7 +40,8 @@ struct camera {
     HPSscene *scene;
     HPScameraStyle style;
     HPMpoint position, up, object;
-    float n, f, viewAngle;
+    float n, f, viewAngle, viewportW, viewportH;
+    bool viewportIsStatic;
     HPMquat rotation; // yaw, pitch, roll, distance for ORBIT camera
     float view[16];
     float projection[16];
