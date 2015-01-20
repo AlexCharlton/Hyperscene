@@ -189,9 +189,9 @@ Render all the active cameras.
 
 Update all the active cameras.
 
-     void hpsResizeCameras();
+     void hpsResizeCameras(float width, float height);
 
-Modify the projection matrix of all cameras, based on the viewport dimensions supplied by the `windowSizeFun` that was passed to `init`. Should be called whenever the window is resized. The viewport dimensions of a camera are scaled by any values passed to `hpsSetCameraViewportRatio`. If `hpsSetCameraViewportDimensions` has been called on a camera, this function has no effect on it.
+Modify the projection matrix of all cameras, based on the viewport dimensions `width` and `hight`. Should be called whenever the window is resized. The viewport dimensions of a camera are scaled by any values passed to `hpsSetCameraViewportRatio`. If `hpsSetCameraViewportDimensions` has been called on a camera, this function has no effect on it.
 
      void hpsSetCameraClipPlanes(HPScamera *camera, float near, float far);
 
