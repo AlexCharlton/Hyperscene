@@ -765,27 +765,48 @@ void hpmFastInverseTranspose(const float *mat, float *result){
 //
 
 // Projection
-void hpmOrtho(int width, int height, float near, float far, float *mat){
+void hpmOrthoViewport(float left, float right, float bottom, float top,
+                      float near, float far,
+                      float vLeft, float vRight, float vBottom, float vTop,
+                      float *mat){
     HPMmat4 *m = (HPMmat4 *) mat;
     initMat4(m);
-    m->_11 = 2.0 / (float) width;
-    m->_22 = 2.0 / (float) height;
+    m->_11 = (vRight - vLeft) / (right - left);
+    m->_14 = (right*vLeft - vRight*left) / (right - left);
+    m->_22 = (vTop - vBottom) / (top - bottom);
+    m->_24 = (top*vBottom - vTop*bottom) / (top - bottom);
     m->_33 = -2 / (far - near);
     m->_34 = -(far + near) / (far - near);
     m->_44 = 1.0;
 }
 
-void hpmFrustum(float left, float right, float bottom, float top,
-		float near, float far, float *mat){
+void hpmOrtho(int width, int height, float near, float far, float *mat){
+    float r = (float) width / 2;
+    float l = -r;
+    float t = (float) height / 2;
+    float b = -t;
+    hpmOrthoViewport(l, r, t, b, near, far, -1.0, 1.0, 1.0, -1.0, mat);
+}
+
+void hpmFrustumViewport(float left, float right, float bottom, float top,
+                        float near, float far,
+                        float vLeft, float vRight, float vBottom, float vTop,
+                        float *mat){
     HPMmat4 *m = (HPMmat4 *) mat;
     initMat4(m);
-    m->_11 = 2.0 * near / (right - left);
-    m->_13 =  (right + left) / (right - left);
-    m->_22 = 2.0 * near / (top - bottom);
-    m->_23 = (top + bottom) / (top - bottom);
+    m->_11 = near * (vRight - vLeft) / (right - left);
+    m->_13 = (vRight*left - right*vLeft) / (right - left);
+    m->_22 = near * (vTop - vBottom) / (top - bottom);
+    m->_23 = (vTop*bottom - top*vBottom) / (top - bottom);
     m->_33 = -(far + near) / (far - near);
     m->_34 = - (2.0 * far * near) / (far - near);
     m->_43 = -1.0;
+}
+
+void hpmFrustum(float left, float right, float bottom, float top,
+		float near, float far, float *mat){
+    hpmFrustumViewport(left, right, bottom, top, near, far, 
+                       -1.0, 1.0, 1.0, -1.0, mat);
 }
 
 void hpmPerspective(int width, int height, float near, float far, float angle,

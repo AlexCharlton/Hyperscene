@@ -164,13 +164,21 @@ Inverse then transpose the given matrix into `result` much faster than if `hpmIn
 
 Create an orthographic projection matrix.
 
+    void hpmOrthoViewport(float left, float right, float bottom, float top, float near, float far, float vLeft, float vRight, float vBottom, float vTop, float *mat);
+
+Create an orthographic projection matrix mapping the `left`, `right`, `top`, `bottom`, `near`, `far` cube to a viewport of `vLeft`, `vRight`, `vTop`, `vBottom`.
+
     void hpmPerspective(int width, int height, float near, float far, float angle, float *mat);
 
-Create an perspective projection matrix. 
+Create an perspective projection matrix with a field of view of `angle` degrees
 
     void hpmFrustum(float left, float right, float bottom, float top, float near, float far, float *mat);
 
-Create a view-frustum matrix.
+Create a perspective projection matrix defined by a frustum with a near side of `left`, `right`, `top`, `bottom`, `near`, and the far side at `far`.
+
+    void hpmFrustumViewport(float left, float right, float bottom, float top, float near, float far, float vLeft, float vRight, float vBottom, float vTop, float *mat);
+
+Create a perspective projection matrix mapping the `left`, `right`, `top`, `bottom`, `near`, `far` frustum to a viewport of `vLeft`, `vRight`, `vTop`, `vBottom`.
 
 ### Camera
     void hpmLookAt(float *eye, float *cam, float *up, float *mat);
@@ -306,6 +314,9 @@ Convert radians into degrees.
 
 
 ## Version history
+### Version 0.7.0
+* Add `hpmOrthoViewport`, `hpmFrustumViewport`
+
 ### Version 0.6.0
 * Add `hpmFastInverseTranspose`
 
