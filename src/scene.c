@@ -9,11 +9,10 @@ HPSpartitionInterface *hpsPartitionInterface;
 
 static HPSvector activeScenes, freeScenes;
 
-void hpsInit(HPSwindowSizeFun windowSizeFun){
+void hpsInit(){
     hpsInitCameras();
     hpsInitVector(&activeScenes, 16);
     hpsInitVector(&freeScenes, 16);
-    hpsSetWindowSizeFun(windowSizeFun);
     hpsPartitionInterface = hpsAABBpartitionInterface;
 }
 

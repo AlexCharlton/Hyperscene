@@ -3,7 +3,7 @@
 #include "memory.h"
 #include "partition.h"
 
-typedef void (*cameraUpdateFun)(int, int, HPScamera*);
+typedef void (*cameraUpdateFun)(HPScamera*);
 
 struct pipeline {
     bool isAlpha;
@@ -40,7 +40,8 @@ struct camera {
     HPSscene *scene;
     HPScameraStyle style;
     HPMpoint position, up, object;
-    float n, f, viewAngle, viewportW, viewportH;
+    float n, f, viewAngle, vw, vh, vwRatio, vhRatio;
+    float vl, vr, vb, vt, vx, vy;
     bool viewportIsStatic;
     HPMquat rotation; // yaw, pitch, roll, distance for ORBIT camera
     float view[16];
@@ -53,7 +54,6 @@ struct camera {
 };
 
 void hpsInitCameras();
-void hpsSetWindowSizeFun(HPSwindowSizeFun fun);
 
 /* Extensions */
 void hpsPreRenderExtensions(HPSscene *scene);
