@@ -600,8 +600,8 @@ void hpsResizeCameras(float width, float height){
     for (i = 0; i < cameraList.size; i++){
 	HPScamera *camera = (HPScamera *) cameraList.data[i];
         if (!camera->viewportIsStatic){
-            camera->vw = (float) width;
-            camera->vh = (float) height;
+            camera->vw = width;
+            camera->vh = height;
             camera->update(camera);
         }
     }
