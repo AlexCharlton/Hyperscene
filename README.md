@@ -29,13 +29,8 @@ The basic use of Hyperscene is as follows: First you create pipelines and a scen
 
 Before any other functions can be used (except for pipeline creation), Hyperscene must be initialized:
 
-     void hpsInit(HPSwindowSizeFun windowSizeFun);
+     void hpsInit();
 
-Where `windowSizeFun` is a function pointer with the following signature:
-
-     void (*HPSwindowSizeFun)(int *, int *);
-
-This function is responsible for setting the two integers to the width and height of the current window, when called.
 
 ### Scenes
 Scenes can be either active or inactive. The only difference is that active scenes are updated with a call to `hpsUpdateScenes`.
@@ -158,9 +153,9 @@ Cameras, aside from having an orientation and position within a given scene, hav
 
 The following functions are used create, delete, and work with cameras:
 
-     HPScamera *hpsMakeCamera(HPScameraType type, HPScameraStyle style, HPSscene *scene);
+    HPScamera *hpsMakeCamera(HPScameraType type, HPScameraStyle style, HPSscene *scene, float width, float height);
 
-Create a new camera associated with the given scene. `type` must be one of `HPS_ORTHO` or `HPS_PERSPECTIVE` for an orthographic or a perspective camera, respectively. `style` must be one of `HPS_POSITION`, `HPS_LOOK_AT`, `HPS_ORBIT`, or `HPS_FIRST_PERSON`. New cameras are automatically activated.
+Create a new camera associated with the given scene. `type` must be one of `HPS_ORTHO` or `HPS_PERSPECTIVE` for an orthographic or a perspective camera, respectively. `style` must be one of `HPS_POSITION`, `HPS_LOOK_AT`, `HPS_ORBIT`, or `HPS_FIRST_PERSON`. `width` and `height` are the width and height of the camera viewport, which may be modified with calls to `hpsSetCameraClipPlanes`, `hpsSetCameraViewAngle`, `hpsSetCameraViewportRatio`, `hpsSetCameraViewportDimensions`, `hpsSetCameraViewportScreenPosition`, and `hpsSetCameraViewportOffset`. New cameras are automatically activated.
 
      void hpsDeleteCamera(HPScamera *camera);
 
@@ -208,11 +203,19 @@ Set the viewing angle of the perspective camera to `angle` degrees. Defaults to 
 
     void hpsSetCameraViewportRatio(HPScamera *camera, float width, float height);
 
-This scales the camera’s viewport in the width and height direction. The effects of the scaling persist after `hpsResizeCameras` is called.
+Scales the camera’s viewport (its view frustum’s near plane) in the width and height direction. The effects of the scaling persist after `hpsResizeCameras` is called.
 
-    void hpsSetCameraViewportDimensions(HPScamera *camera, int width, int height);
+    void hpsSetCameraViewportDimensions(HPScamera *camera, float width, float height);
 
-This sets the camera’s viewport dimensions to the given width and height, and fixes these dimensions such that they will not be changed when `hpsResizeCameras` is called.
+Sets the camera’s viewport (its view frustum’s near plane) dimensions to the given width and height, and fixes these dimensions such that they will not be changed when `hpsResizeCameras` is called.
+
+    void hpsSetCameraViewportScreenPosition(HPScamera *camera, float left, float right, float bottom, float top);
+
+Set the area of the screen that the camera renders to, defined by the rectangle of `left`, `right`, `bottom`, `top`. These default to the full screen, which is represented by values of `-1, 1, -1, 1`, respectively.
+
+    void hpsSetCameraViewportOffset(HPScamera *camera, float x, float y);
+
+Moves the camera’s viewport (its view frustum’s near plane) by `(x, y)` expressed as a fraction of the viewport’s width and height. This is generally only useful for a perspective projection, when lines should converge not to the middle of the screen, but to another point. Setting `x` to `0.5`, for example, moves the focal centre to the right edge of the viewport.
 
 #### Movement and rotation
      void hpsMoveCamera(HPScamera *camera, float *vec);
