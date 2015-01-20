@@ -595,7 +595,7 @@ void hpsSetCameraRoll(HPScamera *camera, float angle){
     camera->rotation.z = angle;
 }
 
-void hpsResizeCameras(int width, int height){
+void hpsResizeCameras(float width, float height){
     int i;
     for (i = 0; i < cameraList.size; i++){
 	HPScamera *camera = (HPScamera *) cameraList.data[i];

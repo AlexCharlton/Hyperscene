@@ -152,7 +152,7 @@ float *hpsCameraView(HPScamera *camera);
 
 float *hpsCameraViewProjection(HPScamera *camera);
 
-void hpsResizeCameras();
+void hpsResizeCameras(float width, float height);
 
 void hpsRenderCameras();
 
