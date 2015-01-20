@@ -144,11 +144,20 @@ void hpmFastInverseTranspose(const float *mat, float *result);
 // Projection
 void hpmOrtho(int width, int height, float near, float far, float *mat);
 
+void hpmOrthoViewport(float left, float right, float bottom, float top,
+                      float near, float far,
+                      float vLeft, float vRight, float vBottom, float vTop,
+                      float *mat);
+
+void hpmPerspective(int width, int height, float near, float far, float angle, float *mat);
+
 void hpmFrustum(float left, float right, float bottom, float top,
 		float near, float far, float *mat);
 
-void hpmPerspective(int width, int height, float near, float far, float angle,
-		    float *mat);
+void hpmFrustumViewport(float left, float right, float bottom, float top,
+                        float near, float far,
+                        float vLeft, float vRight, float vBottom, float vTop,
+                        float *mat);
 
 // Camera
 void hpmLookAt(float *eye, float *obj, float *up, float *mat);
