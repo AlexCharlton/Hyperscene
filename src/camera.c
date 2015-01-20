@@ -371,7 +371,7 @@ static void hpsOrthoCamera(HPScamera *camera){
     float l = r - width;
     float t = height * (0.5 + camera->vy);
     float b = t - height;
-    hpmOrthoViewport(l, r, t, b, camera->n, camera->f, 
+    hpmOrthoViewport(l, r, b, t, camera->n, camera->f, 
                      camera->vl, camera->vr, camera->vb, camera->vt,
                      camera->projection);
 }
@@ -387,7 +387,7 @@ static void hpsPerspectiveCamera(HPScamera *camera){
     float l = r - width;
     float t = height * (0.5 + camera->vy);
     float b = t - height;
-    hpmFrustumViewport(l, r, t, b, camera->n, camera->f,
+    hpmFrustumViewport(l, r, b, t, camera->n, camera->f,
                        camera->vl, camera->vr, camera->vb, camera->vt,
                        camera->projection);
 }
